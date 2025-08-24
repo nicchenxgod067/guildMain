@@ -33,9 +33,8 @@ import threading
 # Flask app setup
 app = Flask(__name__)
 
-# Static website directory (../website relative to this file)
-PROJECT_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-WEBSITE_DIR = os.path.join(PROJECT_ROOT_DIR, 'website')
+# Static website directory (website folder in same directory as app.py)
+WEBSITE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'website')
 
 # Simple auth configuration
 APP_SECRET = os.environ.get('APP_SECRET', 'change-this-secret')
