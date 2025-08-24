@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TCP BOT - Endpoint Control Panel</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #1a365d;
+      --secondary: #2d3748;
+      --accent: #3182ce;
+      --success: #38a169;
+      --danger: #e53e3e;
+      --warning: #d69e2e;
+      --text-primary: #2d3748;
+      --text-secondary: #4a5568;
+      --text-muted: #718096;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f7fafc;
+      --bg-tertiary: #edf2f7;
+      --border: #e2e8f0;
+      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 24px 32px;
+      box-shadow: var(--shadow-lg);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .header .subtitle {
+      color: #cbd5e0;
+      font-size: 16px;
+      font-weight: 400;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .panel h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+    }
+
+    .form-control::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Dropdown specific styling */
+    select.form-control {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 12px center;
+      background-repeat: no-repeat;
+      background-size: 16px;
+      padding-right: 40px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+
+    select.form-control option {
+      padding: 8px 12px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    select.form-control option:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2c5aa0;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #1a202c;
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #2f855a;
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c53030;
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 16px;
+    }
+
+    .status-success {
+      background: #f0fff4;
+      color: var(--success);
+      border: 1px solid #c6f6d5;
+    }
+
+    .status-error {
+      background: #fed7d7;
+      color: var(--danger);
+      border: 1px solid #feb2b2;
+    }
+
+    .status-info {
+      background: #ebf8ff;
+      color: var(--accent);
+      border: 1px solid #bee3f8;
+    }
+
+    .status-muted {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .accounts-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+    }
+
+    .account-item {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .account-item:last-child {
+      border-bottom: none;
+    }
+
+    .account-name {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .account-uid {
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .output-panel {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid var(--accent);
+    }
+
+    .info-box {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-top: 16px;
+    }
+
+    .info-box h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .info-box p {
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .endpoint-info {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .endpoint-info h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .endpoint-code {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      margin: 4px 0;
+    }
+
+    /* Modal (Centered Popup) */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      z-index: 999;
+    }
+
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(720px, calc(100% - 32px));
+      max-height: 80vh;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-primary);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 16px 20px;
+      background: var(--bg-primary);
+    }
+
+    .modal-body pre {
+      margin: 0;
+      max-height: 60vh;
+      overflow: auto;
+    }
+
+    /* Formal response styling */
+    .response-content {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .response-success {
+      border-left: 4px solid var(--success);
+      background: #f0fff4;
+    }
+
+    .response-error {
+      border-left: 4px solid var(--danger);
+      background: #fed7d7;
+    }
+
+    .response-info {
+      border-left: 4px solid var(--accent);
+      background: #ebf8ff;
+    }
+
+    @media (max-width: 1200px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .container {
+        padding: 24px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 20px 24px;
+      }
+      
+      .container {
+        padding: 16px;
+      }
+      
+      .btn-group {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>TCP BOT Endpoint Control Panel</h1>
+    <div class="subtitle">Command like never before, Next-level dominance starts here.</div>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <!-- Left Column: Account Management -->
+      <div>
+        <h2 class="section-title">Account Management</h2>
+        
+        <!-- Current Accounts Panel -->
+        <div class="panel">
+          <h2>📋 Current Accounts</h2>
+          <div class="btn-group">
+            <button id="refreshAccounts" class="btn btn-secondary">🔄 Refresh List</button>
+          </div>
+          <div id="accountsList" class="accounts-list">
+            <div class="account-item">
+              <div>
+                <div class="account-name">No accounts loaded</div>
+                <div class="account-uid">Click refresh to load accounts</div>
+        </div>
+        </div>
+      </div>
+      </div>
+
+        <!-- Add Account Panel -->
+        <div class="panel">
+          <h2>➕ Add New Account</h2>
+          <div class="form-group">
+            <label for="addName">Bot Name</label>
+            <input type="text" id="addName" class="form-control" placeholder="Enter bot name" />
+          </div>
+          <div class="form-group">
+            <label for="addUid">User ID</label>
+            <input type="text" id="addUid" class="form-control" placeholder="Enter UID" />
+          </div>
+          <div class="form-group">
+            <label for="addPass">Password</label>
+            <input type="password" id="addPass" class="form-control" placeholder="Enter password" />
+          </div>
+          <button id="addBtn" class="btn btn-success">➕ Add & Start Bot</button>
+          <div id="addMsg" class="status status-muted"></div>
+          
+          <div class="endpoint-info">
+            <h4>Endpoint Used:</h4>
+            <div class="endpoint-code">GET /add_account?name={name}&uid={uid}&password={password}</div>
+          </div>
+        </div>
+
+        <!-- Account Operations Panel -->
+        <div class="panel">
+          <h2>⚙️ Account Operations</h2>
+          
+          <div class="form-group">
+            <label for="delName">Remove Account</label>
+            <div class="btn-group">
+              <select id="delName" class="form-control">
+                <option value="">Select a bot to remove</option>
+              </select>
+              <button id="delBtn" class="btn btn-danger">🗑️ Remove</button>
+      </div>
+            <div id="delMsg" class="status status-muted"></div>
+            
+            <div class="endpoint-info">
+              <h4>Endpoint Used:</h4>
+              <div class="endpoint-code">GET /remove_account?name={name}</div>
+        </div>
+      </div>
+
+          <div class="form-group">
+            <label for="updName">Update Account</label>
+            <select id="updName" class="form-control">
+              <option value="">Select a bot to update</option>
+            </select>
+            <input type="text" id="updUid" class="form-control" placeholder="New UID (optional)" />
+            <input type="password" id="updPass" class="form-control" placeholder="New password (optional)" />
+            <button id="updBtn" class="btn btn-primary">✏️ Update & Restart</button>
+            <div id="updMsg" class="status status-muted"></div>
+            
+            <div class="endpoint-info">
+              <h4>Endpoint Used:</h4>
+              <div class="endpoint-code">GET /update_account?name={name}&uid={uid}&password={password}</div>
+            </div>
+        </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Friend Management -->
+      <div>
+        <h2 class="section-title">Friend Management</h2>
+        
+        <!-- Friend Management Panel -->
+        <div class="panel">
+          <h2>👥 Friend Operations</h2>
+          <div class="form-group">
+            <label for="botNameFR">Bot Name</label>
+            <select id="botNameFR" class="form-control">
+              <option value="">Select a bot from accounts list</option>
+            </select>
+        </div>
+          <div class="form-group">
+            <label for="botTargetUid">Target User ID</label>
+            <input type="text" id="botTargetUid" class="form-control" placeholder="Enter target UID" />
+        </div>
+          <div class="btn-group">
+            <button id="sendReqBtn" class="btn btn-success">➕ Add Bot</button>
+            <button id="remReqBtn" class="btn btn-danger">➖ Remove Bot</button>
+      </div>
+          
+          <div class="endpoint-info">
+            <h4>Endpoints Used:</h4>
+            <div class="endpoint-code">GET /send_requests?bot_name={bot_name}&uid={uid}</div>
+            <div class="endpoint-code">GET /remove_friend?bot_name={bot_name}&uid={uid}</div>
+          </div>
+          
+          <div class="info-box">
+            <h3>Response Output</h3>
+            <div id="frOut" class="output-panel">No request yet.</div>
+          </div>
+        </div>
+
+        <!-- System Status Panel -->
+        <div class="panel">
+          <h2>📊 System Status</h2>
+          <div class="btn-group">
+            <button id="statusBtn" class="btn btn-primary">🔄 Refresh Status</button>
+          </div>
+          
+          <div class="endpoint-info">
+            <h4>Endpoint Used:</h4>
+            <div class="endpoint-code">GET /status_json</div>
+      </div>
+
+          <div class="info-box">
+            <h3>Live Status Data</h3>
+            <div id="statusOut" class="output-panel">No status data loaded.</div>
+          </div>
+        </div>
+
+        <!-- API Documentation Panel -->
+        <div class="panel">
+          <h2>📚 API Documentation</h2>
+          <div class="info-box">
+            <h3>Available Endpoints</h3>
+            <p><strong>Account Management:</strong></p>
+            <div class="endpoint-code">GET /add_account?name={name}&uid={uid}&password={password}</div>
+            <div class="endpoint-code">GET /remove_account?name={name}</div>
+            <div class="endpoint-code">GET /update_account?name={name}&uid={uid}&password={password}</div>
+            <div class="endpoint-code">GET /accounts</div>
+            
+            <p><strong>Friend Management:</strong></p>
+            <div class="endpoint-code">GET /send_requests?bot_name={bot_name}&uid={uid}</div>
+            <div class="endpoint-code">GET /remove_friend?bot_name={bot_name}&uid={uid}</div>
+            
+            <p><strong>System:</strong></p>
+            <div class="endpoint-code">GET /status_json</div>
+          </div>
+          </div>
+          </div>
+        </div>
+      </div>
+
+  <!-- Centered Modal for Responses -->
+  <div id="modalBackdrop" class="modal-backdrop"></div>
+  <div id="responseModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <div id="modalTitle" class="modal-title">Response</div>
+      <button id="modalClose" class="modal-close" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalContent" class="response-content">No content.</div>
+    </div>
+      </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    
+    const setStatus = (id, text, type = 'muted') => {
+      const el = $(id);
+      el.textContent = text;
+      el.className = `status status-${type}`;
+    };
+
+    const setOutput = (id, text) => {
+      $(id).textContent = text;
+    };
+
+    // Modal helpers
+    function showModal(title, content) {
+      $('modalTitle').textContent = title || 'Response';
+      
+      // Format content for formal display
+      let formattedContent = content;
+      let responseClass = 'response-info';
+      
+      // Try to parse JSON and format it nicely
+      try {
+        if (content.includes('{') && content.includes('}')) {
+          const parsed = JSON.parse(content);
+          if (parsed.message) {
+            formattedContent = parsed.message;
+            responseClass = 'response-success';
+          } else if (parsed.error) {
+            formattedContent = parsed.error;
+            responseClass = 'response-error';
+          } else {
+            formattedContent = JSON.stringify(parsed, null, 2);
+          }
+        }
+      } catch (e) {
+        // If not JSON, format the plain text
+        if (content.includes('❌') || content.includes('Error') || content.includes('Failed')) {
+          responseClass = 'response-error';
+        } else if (content.includes('✅') || content.includes('Success') || content.includes('Successfully')) {
+          responseClass = 'response-success';
+        }
+        formattedContent = content;
+      }
+      
+      const modalContent = $('modalContent');
+      modalContent.textContent = formattedContent;
+      modalContent.className = `response-content ${responseClass}`;
+      
+      $('modalBackdrop').style.display = 'block';
+      $('responseModal').style.display = 'block';
+    }
+
+    function hideModal() {
+      $('modalBackdrop').style.display = 'none';
+      $('responseModal').style.display = 'none';
+    }
+
+    $('modalClose').onclick = hideModal;
+    $('modalBackdrop').onclick = hideModal;
+
+    async function get(url) { 
+      return await fetch(url); 
+    }
+
+    // Account Management
+    async function loadAccounts() {
+      setOutput('accountsList', '<div class="account-item"><div><div class="account-name">Loading...</div><div class="account-uid">Please wait</div></div></div>');
+      
+      try {
+        const r = await get('/accounts');
+        if (!r.ok) { 
+          setOutput('accountsList', '<div class="account-item"><div><div class="account-name">❌ Error loading accounts</div><div class="account-uid">Status: ' + r.status + '</div></div></div>'); 
+          return; 
+        }
+        
+        const data = await r.json();
+        const items = (data.accounts || []).map(a => 
+          `<div class="account-item">
+            <div>
+              <div class="account-name">${a.name}</div>
+              <div class="account-uid">UID: ${a.uid}</div>
+    </div>
+          </div>`
+        );
+        
+        $('accountsList').innerHTML = items.join('') || '<div class="account-item"><div><div class="account-name">No accounts found</div><div class="account-uid">Add an account to get started</div></div></div>';
+        
+        // Populate all dropdowns with available bot names
+        populateBotDropdowns(data.accounts || []);
+      } catch (e) { 
+        setOutput('accountsList', `<div class="account-item"><div><div class="account-name">❌ Error loading accounts</div><div class="account-uid">${e}</div></div></div>`); 
+      }
+    }
+
+    // Function to populate all bot name dropdowns
+    function populateBotDropdowns(accounts) {
+      const botNames = accounts.map(acc => acc.name);
+      
+      // Get all dropdown elements
+      const dropdowns = ['botNameFR', 'delName', 'updName'];
+      
+      dropdowns.forEach(dropdownId => {
+        const dropdown = $(dropdownId);
+        if (dropdown) {
+          // Keep the first option (placeholder)
+          const placeholder = dropdown.options[0];
+          dropdown.innerHTML = '';
+          dropdown.appendChild(placeholder);
+          
+          // Add bot name options
+          botNames.forEach(botName => {
+            const option = document.createElement('option');
+            option.value = botName;
+            option.textContent = botName;
+            dropdown.appendChild(option);
+          });
+        }
+      });
+    }
+
+    $('refreshAccounts').onclick = loadAccounts;
+
+    $('addBtn').onclick = async () => {
+      const name = $('addName').value.trim();
+      const uid = $('addUid').value.trim();
+      const password = $('addPass').value.trim();
+      
+      if (!name || !uid || !password) { 
+        setStatus('addMsg', '❌ All fields are required', 'error'); 
+        return; 
+      }
+      
+      const url = `/add_account?name=${encodeURIComponent(name)}&uid=${encodeURIComponent(uid)}&password=${encodeURIComponent(password)}`;
+      
+      try {
+        const r = await get(url);
+        const responseText = await r.text();
+        setStatus('addMsg', responseText, r.ok ? 'success' : 'error');
+        showModal('Add Account', responseText);
+        
+        if (r.ok) {
+          await loadAccounts();
+          // Clear form
+          $('addName').value = '';
+          $('addUid').value = '';
+          $('addPass').value = '';
+        }
+      } catch (e) { 
+        setStatus('addMsg', `❌ Error: ${e}`, 'error'); 
+        showModal('Add Account', String(e));
+      }
+    };
+
+    $('delBtn').onclick = async () => {
+      const name = $('delName').value.trim ? $('delName').value.trim() : $('delName').value;
+      
+      if (!name) { 
+        setStatus('delMsg', '❌ Bot name is required', 'error'); 
+        return; 
+      }
+      
+      const url = `/remove_account?name=${encodeURIComponent(name)}`;
+      
+      try {
+        const r = await get(url);
+        const responseText = await r.text();
+        setStatus('delMsg', responseText, r.ok ? 'success' : 'error');
+        showModal('Remove Account', responseText);
+        
+        if (r.ok) {
+          await loadAccounts();
+          $('delName').value = '';
+        }
+      } catch (e) { 
+        setStatus('delMsg', `❌ Error: ${e}`, 'error'); 
+        showModal('Remove Account', String(e));
+      }
+    };
+
+    $('updBtn').onclick = async () => {
+      const name = $('updName').value.trim ? $('updName').value.trim() : $('updName').value;
+      const uid = $('updUid').value.trim();
+      const password = $('updPass').value.trim();
+      
+      if (!name) { 
+        setStatus('updMsg', '❌ Bot name is required', 'error'); 
+        return; 
+      }
+      
+      const params = new URLSearchParams({ name });
+      if (uid) params.set('uid', uid);
+      if (password) params.set('password', password);
+      
+      const url = `/update_account?${params.toString()}`;
+      
+      try {
+        const r = await get(url);
+        const responseText = await r.text();
+        setStatus('updMsg', responseText, r.ok ? 'success' : 'error');
+        showModal('Update Account', responseText);
+        
+        if (r.ok) {
+          await loadAccounts();
+          // Clear form
+          $('updName').value = '';
+          $('updUid').value = '';
+          $('updPass').value = '';
+        }
+      } catch (e) { 
+        setStatus('updMsg', `❌ Error: ${e}`, 'error'); 
+        showModal('Update Account', String(e));
+      }
+    };
+
+    // Friend Management
+    $('sendReqBtn').onclick = async () => {
+      const bot = $('botNameFR').value.trim ? $('botNameFR').value.trim() : $('botNameFR').value;
+      const uid = $('botTargetUid').value.trim();
+      
+      if (!bot || !uid) { 
+        setOutput('frOut', '❌ Please enter both bot name and target UID'); 
+        showModal('Send Friend Request', '❌ Please enter both bot name and target UID');
+        return; 
+      }
+      
+      setOutput('frOut', '🔄 Sending friend request...');
+      
+      try {
+        const r = await get(`/send_requests?bot_name=${encodeURIComponent(bot)}&uid=${encodeURIComponent(uid)}`);
+        const responseText = await r.text();
+        setOutput('frOut', responseText);
+        showModal('Send Friend Request', responseText);
+      } catch (e) { 
+        const msg = `❌ Error: ${e}`;
+        setOutput('frOut', msg);
+        showModal('Send Friend Request', msg);
+      }
+    };
+
+    $('remReqBtn').onclick = async () => {
+      const bot = $('botNameFR').value.trim ? $('botNameFR').value.trim() : $('botNameFR').value;
+      const uid = $('botTargetUid').value.trim();
+      
+      if (!bot || !uid) { 
+        setOutput('frOut', '❌ Please enter both bot name and target UID'); 
+        showModal('Remove Friend', '❌ Please enter both bot name and target UID');
+        return; 
+      }
+      
+      setOutput('frOut', '🔄 Removing friend...');
+      
+      try {
+        const r = await get(`/remove_friend?bot_name=${encodeURIComponent(bot)}&uid=${encodeURIComponent(uid)}`);
+        const responseText = await r.text();
+        setOutput('frOut', responseText);
+        showModal('Remove Friend', responseText);
+      } catch (e) { 
+        const msg = `❌ Error: ${e}`;
+        setOutput('frOut', msg);
+        showModal('Remove Friend', msg);
+      }
+    };
+
+    // System Status
+    $('statusBtn').onclick = async () => {
+      setOutput('statusOut', '🔄 Refreshing status...');
+      
+      try {
+        const r = await get('/status_json');
+        const data = await r.json();
+        
+        // Format status data in a readable way
+        let formattedStatus = '';
+        if (data.accounts && Array.isArray(data.accounts)) {
+          formattedStatus = '📊 Bot Status Summary:\n\n';
+          data.accounts.forEach((account, index) => {
+            const status = account.status || 'Unknown';
+            const lastSeen = account.last_seen || 'N/A';
+            formattedStatus += `${index + 1}. ${account.name} (${account.uid})\n`;
+            formattedStatus += `   Status: ${status}\n`;
+            formattedStatus += `   Last Seen: ${lastSeen}\n\n`;
+          });
+        } else {
+          formattedStatus = JSON.stringify(data, null, 2);
+        }
+        
+        setOutput('statusOut', formattedStatus);
+        showModal('System Status', formattedStatus);
+      } catch (e) { 
+        const msg = `❌ Error: ${e}`;
+        setOutput('statusOut', msg);
+        showModal('System Status', msg);
+      }
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load accounts on page load
+      loadAccounts();
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: tcp-bot-app
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.16
+      - key: APP_SECRET
+        generateValue: true
+      - key: DISCORD_WEBHOOK_URL
+        value: "https://discordapp.com/api/webhooks/1407383254155132948/NLyhaOHYDWbf8GAPCtT7w6q3ViHd663QvDtIHoAGzOHZLT1JI5t6EDbSIn3-HgO0z29Q"
