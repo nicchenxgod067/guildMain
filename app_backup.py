@@ -33,8 +33,9 @@ import threading
 # Flask app setup
 app = Flask(__name__)
 
-# Static website directory (website folder in same directory as app.py)
-WEBSITE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'website')
+# Static website directory (../website relative to this file)
+PROJECT_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WEBSITE_DIR = os.path.join(PROJECT_ROOT_DIR, 'website')
 
 # Simple auth configuration
 APP_SECRET = os.environ.get('APP_SECRET', 'change-this-secret')
@@ -1751,38 +1752,8 @@ async def main_async():
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
 
-# Global event loop for bot management
-bot_loop = None
-bot_thread = None
-
-def start_bot_system():
-    """Start the bot system in a separate thread"""
-    global bot_loop, bot_thread
-    
-    def run_bots():
-        global bot_loop
-        bot_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(bot_loop)
-        try:
-            bot_loop.run_until_complete(main_async())
-        except Exception as e:
-            print(f"Error in bot system: {str(e)}")
-        finally:
-            if bot_loop and not bot_loop.is_closed():
-                bot_loop.close()
-    
-    bot_thread = Thread(target=run_bots, daemon=True)
-    bot_thread.start()
-    print("Bot system started in background thread")
-
 if __name__ == '__main__':
-    # For local development, run both Flask and bots
     flask_thread = Thread(target=run_flask_app)
     flask_thread.daemon = True
     flask_thread.start()
-    
-    # Start the bot system
     asyncio.run(main_async())
-else:
-    # For production deployment (gunicorn), start bots in background
-    start_bot_system()
