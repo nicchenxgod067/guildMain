@@ -164,8 +164,8 @@ def debug_tokens():
         
         for i, token_data in enumerate(tokens[:5]):  # Only check first 5 tokens
             try:
-                # Basic token validation
-                token = token_data.get("token", "")
+                # Basic token validation - token_data is already the token string
+                token = token_data
                 if len(token) > 100:  # Basic length check
                     token_info.append({
                         "index": i,

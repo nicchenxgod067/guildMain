@@ -1079,9 +1079,9 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                     try:
                                         with open('spam_config.json', 'r') as f:
                                             spam_config = json.load(f)
-                                        spam_api_url = spam_config.get("spam_api_url", "https://spam-friend-red.vercel.app/send_requests")
+                                        spam_api_url = spam_config.get("spam_api_url", "https://spam-friend-58ahrppsr-nicchenxgods-projects.vercel.app/send_requests")
                                     except Exception:
-                                        spam_api_url = "https://spam-friend-red.vercel.app/send_requests"
+                                        spam_api_url = "https://spam-friend-58ahrppsr-nicchenxgods-projects.vercel.app/send_requests"
                                     url = f"{spam_api_url}?uid={target_uid}"
                                     try:
                                         async with session.get(url, timeout=10) as response:
@@ -1642,11 +1642,11 @@ def spam_friend():
         try:
             with open('spam_config.json', 'r') as f:
                 spam_config = json.load(f)
-            spam_api_url = spam_config.get("spam_api_url", "https://your-spam-app.vercel.app/send_requests")
+            spam_api_url = spam_config.get("spam_api_url", "https://spam-friend-58ahrppsr-nicchenxgods-projects.vercel.app/send_requests")
             timeout = spam_config.get("timeout", 60)
             enabled = spam_config.get("enabled", True)
         except Exception:
-            spam_api_url = "https://your-spam-app.vercel.app/send_requests"
+            spam_api_url = "https://spam-friend-58ahrppsr-nicchenxgods-projects.vercel.app/send_requests"
             timeout = 60
             enabled = True
         
