@@ -1678,6 +1678,21 @@ def spam_friend():
     except Exception as e:
         return jsonify({"error": f"Internal error: {str(e)}"}), 500
 
+@app.route("/available_bots", methods=["GET"])
+def get_available_bots():
+    """Get list of available bot names for friend requests - useful for debugging on Render"""
+    try:
+        with bot_tokens_lock:
+            available_bots = list(bot_tokens.keys())
+        return jsonify({
+            "bots": available_bots,
+            "count": len(available_bots),
+            "message": f"Found {len(available_bots)} available bots for friend requests",
+            "deployment": "Render - Using static tokens from token_bd.json"
+        })
+    except Exception as e:
+        return jsonify({"message": f"Internal error: {str(e)}"}), 500
+
 def run_flask_app():
     app.run(host="0.0.0.0", port=5000)
 
@@ -1774,6 +1789,49 @@ def start_bot_system():
     bot_thread = Thread(target=run_bots, daemon=True)
     bot_thread.start()
     print("Bot system started in background thread")
+
+# Function to load static tokens from token_bd.json for friend request endpoints
+def load_static_tokens():
+    """Load static tokens from token_bd.json for friend request endpoints to work on Render"""
+    try:
+        token_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'TCP+SPAM', 'spam friend', 'token_bd.json')
+        if os.path.exists(token_file_path):
+            with open(token_file_path, 'r', encoding='utf-8') as f:
+                token_data = json.load(f)
+                
+            with bot_tokens_lock:
+                for i, item in enumerate(token_data):
+                    if 'token' in item:
+                        # Extract bot name from JWT token
+                        try:
+                            token_parts = item['token'].split('.')
+                            if len(token_parts) == 3:
+                                # Decode JWT payload to get bot name
+                                import base64
+                                payload_str = token_parts[1]
+                                # Add padding if needed
+                                payload_str += '=' * (4 - len(payload_str) % 4)
+                                payload = json.loads(base64.b64decode(payload_str).decode('utf-8'))
+                                bot_name = payload.get('nickname', f'BOT_{i+1}')
+                                bot_tokens[bot_name] = item['token']
+                                print(f"✅ Loaded static token for bot: {bot_name}")
+                        except Exception as e:
+                            print(f"⚠️ Error parsing token {i}: {e}")
+                            # Fallback to generic name
+                            bot_name = f'BOT_{i+1}'
+                            bot_tokens[bot_name] = item['token']
+                            print(f"✅ Loaded static token for bot: {bot_name}")
+                            
+            print(f"🎯 Loaded {len(token_data)} static tokens for friend requests on Render")
+        else:
+            print(f"❌ Token file not found at: {token_file_path}")
+    except Exception as e:
+        print(f"❌ Error loading static tokens: {e}")
+
+# Load static tokens on startup for Render deployment
+load_static_tokens()
+
+
 
 if __name__ == '__main__':
     # For local development, run both Flask and bots

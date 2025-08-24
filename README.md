@@ -1,67 +1,110 @@
-# TCP Bot Application
+# TCP BD BOT with Web Interface
 
-A powerful TCP bot application with web interface for managing multiple bot accounts.
+A comprehensive TCP bot system for Free Fire with a modern web interface, featuring friend request management, account management, and real-time bot monitoring.
 
-## Features
+## 🚀 Features
 
-- **Multi-Account Bot Management**: Manage multiple bot accounts simultaneously
-- **Web Interface**: Beautiful and responsive web dashboard
-- **Real-time Monitoring**: Monitor bot status and performance
-- **RESTful API**: Complete API for bot management
-- **Auto-restart**: Automatic bot restart on failure
-- **Secure Authentication**: Built-in security features
+- **TCP Bot System**: Real-time game server connection and monitoring
+- **Web Interface**: Modern, responsive dashboard for bot management
+- **Friend Request Management**: Send and remove friend requests using bot accounts
+- **Account Management**: Add, remove, update bot accounts
+- **Real-time Status**: Monitor bot online status and activity
+- **Render Deployment Ready**: Optimized for cloud deployment with static token support
 
-## API Endpoints
+## 🔧 API Endpoints
 
-### Status
-- `GET /api/status` - Get application status
+### Core Endpoints
+- `GET /` - Main web interface
+- `GET /accounts` - List all bot accounts
+- `GET /status_json` - Get bot status information
 
-### Accounts
-- `GET /api/accounts` - Get all accounts
-- `POST /api/accounts` - Add new account
-- `DELETE /api/accounts/<name>` - Delete account
+### Friend Management
+- `GET /send_requests?bot_name={name}&uid={uid}` - Send friend request
+- `GET /remove_friend?bot_name={name}&uid={uid}` - Remove friend
+- `GET /available_bots` - List available bots for friend requests
 
-### Bot Management
-- `POST /api/bots/start/<name>` - Start bot for account
-- `POST /api/bots/stop/<name>` - Stop bot for account
-- `GET /api/bots/status` - Get bot status
+### Account Management
+- `GET /add_account?name={name}&uid={uid}&password={password}` - Add new account
+- `GET /remove_account?name={name}` - Remove account
+- `GET /update_account?name={name}&uid={uid}&password={password}` - Update account
 
-## Environment Variables
+## 🌐 Environment Variables
 
-- `APP_SECRET` - Application secret key (auto-generated on Render)
-- `DISCORD_WEBHOOK_URL` - Discord webhook for notifications
-- `PORT` - Port number (auto-set by Render)
+- `APP_SECRET` - Secret key for session management
+- `DISCORD_WEBHOOK_URL` - Discord webhook for access requests
+- `PORT` - Port for the application (set by Render)
 
-## Deployment
+## 🚀 Deployment
 
-This application is configured for deployment on Render:
+### Render Deployment
+The application is optimized for Render deployment with the following features:
 
-1. Connect your GitHub repository
-2. Render will automatically detect the configuration
-3. The app will be deployed with all necessary dependencies
+1. **Static Token Loading**: Automatically loads tokens from `token_bd.json` on startup
+2. **Cloud-Optimized**: Works without requiring live bot login (which may be blocked in cloud environments)
+3. **Gunicorn Support**: Uses production WSGI server for optimal performance
 
-## Local Development
+### Local Development
+```bash
+python app.py
+```
 
-1. Install dependencies: `pip install -r requirements.txt`
-2. Run the application: `python app.py`
-3. Access the web interface at `http://localhost:5000`
+### Production (Render)
+```bash
+gunicorn app:app --bind 0.0.0.0:$PORT
+```
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 ├── app.py                 # Main Flask application
-├── requirements.txt       # Python dependencies
-├── render.yaml           # Render deployment configuration
-├── Procfile             # Process file for deployment
-├── runtime.txt          # Python runtime specification
-├── website/             # Web interface files
-│   ├── index.html      # Main page
-│   ├── script.js       # JavaScript functionality
-│   └── styles.css      # Styling
-├── *.py                # Bot and utility modules
-└── *.json              # Configuration files
+├── website/              # Web interface files
+├── TCP+SPAM/            # Spam service and token management
+│   └── spam friend/     # External spam service
+│       └── token_bd.json # Static tokens for friend requests
+├── render.yaml          # Render deployment configuration
+├── Procfile            # Process configuration
+└── requirements.txt     # Python dependencies
 ```
 
-## License
+## 🔑 Token System
 
-This project is for educational purposes only.
+### Local Development
+- Uses live tokens generated from bot login
+- Requires successful game server connection
+
+### Render Deployment
+- Uses static tokens from `token_bd.json`
+- No need for live bot login
+- Ensures friend request endpoints work in cloud environment
+
+## 🐛 Troubleshooting
+
+### "No token found for bot" Error
+This error occurs when:
+1. **Local**: Bot hasn't logged in yet or login failed
+2. **Render**: Static tokens not loaded properly
+
+**Solution**: Check the `/available_bots` endpoint to see which bots are available.
+
+### Render Deployment Issues
+1. Ensure `token_bd.json` exists in the correct path
+2. Check build logs for token loading messages
+3. Verify the `/available_bots` endpoint returns bot names
+
+## 📝 Recent Updates
+
+- **Render Deployment Fix**: Added static token loading for cloud deployment
+- **New Endpoint**: `/available_bots` for debugging available bots
+- **Cloud Optimization**: Friend request endpoints work without live bot login
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License.
