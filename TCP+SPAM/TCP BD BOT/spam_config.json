@@ -1,5 +1,5 @@
 {
-    "spam_api_url": "https://spam-friend-58ahrppsr-nicchenxgods-projects.vercel.app/send_requests",
+    "spam_api_url": "https://guildmain.onrender.com/send_requests",
     "timeout": 60,
     "enabled": true
 }
