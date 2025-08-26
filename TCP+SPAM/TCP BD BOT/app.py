@@ -1133,16 +1133,13 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         return False
                                                 
                                                 try:
-                                                    if 'data' in data and 'message' in data['data']:
-                                                        error_msg = f"[FF0000]❌ {data['data']['message']}"
-                                                        if chat_id == 3037318759:
-                                                            msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
-                                                        else:
-                                                            msg_packet = await send_msg(error_msg, uid, key, iv)
-                                                        if msg_packet:
-                                                            writer.write(msg_packet)
-                                                            await writer.drain()
-                                                    else:
+                                                    # Check if response has success/failure counts
+                                                    success_count = data.get('success_count', 0)
+                                                    failed_count = data.get('failed_count', 0)
+                                                    total_requests = data.get('total_requests', 0)
+                                                    
+                                                    if success_count > 0 or (success_count == 0 and failed_count == 0):
+                                                        # Success case - show actual counts from response
                                                         success_msg = "[00FF00]✅ Spam friend request sent successfully!"
                                                         if chat_id == 3037318759:
                                                             msg_packet = await send_clan_msg(success_msg, chat_id, key, iv)
@@ -1153,13 +1150,34 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                             await writer.drain()
                                                             await asyncio.sleep(0.5)
                                                         
-                                                        for field, value in data.items():
-                                                            if field not in ['status', 'success', 'data'] and not field.startswith('_'):
-                                                                await send_field(field, value)
-                                                        if 'data' in data and isinstance(data['data'], dict):
-                                                            for field, value in data['data'].items():
-                                                                if field not in ['status', 'success'] and not field.startswith('_'):
-                                                                    await send_field(field, value)
+                                                        # Send actual counts from response
+                                                        await send_field("success_count", str(success_count))
+                                                        await send_field("failed_count", str(failed_count))
+                                                        await send_field("total_requests", str(total_requests))
+                                                        
+                                                        completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
+                                                        if chat_id == 3037318759:
+                                                            msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
+                                                        else:
+                                                            msg_packet = await send_msg(completion_msg, uid, key, iv)
+                                                        if msg_packet:
+                                                            writer.write(msg_packet)
+                                                            await writer.drain()
+                                                    else:
+                                                        # Error case
+                                                        error_msg = f"[FF0000]❌ Failed to send friend request"
+                                                        if chat_id == 3037318759:
+                                                            msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                                        else:
+                                                            msg_packet = await send_msg(error_msg, uid, key, iv)
+                                                        if msg_packet:
+                                                            writer.write(msg_packet)
+                                                            await writer.drain()
+                                                        
+                                                        # Send failure details
+                                                        await send_field("success_count", str(success_count))
+                                                        await send_field("failed_count", str(failed_count))
+                                                        await send_field("total_requests", str(total_requests))
                                                         
                                                         completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
                                                         if chat_id == 3037318759:
