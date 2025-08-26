@@ -1075,12 +1075,27 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                         if len(parts) > 1 and parts[1].isdigit():
                             target_uid = parts[1]
                             try:
+                                # Get token from bot's token storage
+                                with bot_tokens_lock:
+                                    bot_token = bot_tokens.get(bot_name)
+                                
+                                if not bot_token:
+                                    error_msg = "[FF0000]❌ Bot token not available. Please wait for bot to fully connect."
+                                    if chat_id == 3037318759:
+                                        msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                    else:
+                                        msg_packet = await send_msg(error_msg, uid, key, iv)
+                                    if msg_packet:
+                                        writer.write(msg_packet)
+                                        await writer.drain()
+                                    return
+                                
                                 # Use bot's own built-in friend request functionality
                                 encrypted_id = encode_uid(target_uid)
                                 payload = f"08a7c4839f1e10{encrypted_id}1801"
                                 encrypted_payload = encrypt_api(payload)
                                 url = API_ENDPOINTS['ADD_FRIEND']
-                                headers = _get_headers(token)
+                                headers = _get_headers(bot_token)
                                 
                                 # Send friend request using bot's own token
                                 response = requests.post(url, headers=headers, data=bytes.fromhex(encrypted_payload), timeout=20)
