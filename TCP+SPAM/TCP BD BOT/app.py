@@ -811,18 +811,16 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                     uid = response.Data.uid
                     chat_id = response.Data.Chat_ID
                     if command == "hi":
-                        # Get player name from UID using spam service directly
+                        # Get player name from UID using spam service
                         player_name = "User"
                         try:
-                            # Use spam service directly to get player name
-                            async with aiohttp.ClientSession() as session:
-                                spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
-                                async with session.get(spam_url, timeout=10) as response:
-                                    if response.status == 200:
-                                        data = await response.json()
-                                        player_name = data.get('player_name', '')
-                                        if not player_name or not player_name.strip():
-                                            player_name = "User"
+                            # Try to get player name from spam service
+                            retrieved_name = await get_player_name_from_spam_service(uid)
+                            if retrieved_name:
+                                player_name = retrieved_name
+                                print(f"Successfully using player name: {player_name}")
+                            else:
+                                print("Failed to get player name from spam service, using 'User'")
                         except Exception as e:
                             print(f"Error getting player name: {e}")
                             player_name = "User"
@@ -835,18 +833,16 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                         writer.write(msg_packet)
                         await writer.drain()
                     elif command == "/help":
-                        # Get player name from UID using spam service directly
+                        # Get player name from UID using spam service
                         player_name = "User"
                         try:
-                            # Use spam service directly to get player name
-                            async with aiohttp.ClientSession() as session:
-                                spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
-                                async with session.get(spam_url, timeout=10) as response:
-                                    if response.status == 200:
-                                        data = await response.json()
-                                        player_name = data.get('player_name', '')
-                                        if not player_name or not player_name.strip():
-                                            player_name = "User"
+                            # Try to get player name from spam service
+                            retrieved_name = await get_player_name_from_spam_service(uid)
+                            if retrieved_name:
+                                player_name = retrieved_name
+                                print(f"Successfully using player name: {player_name}")
+                            else:
+                                print("Failed to get player name from spam service, using 'User'")
                         except Exception as e:
                             print(f"Error getting player name: {e}")
                             player_name = "User"
@@ -1331,6 +1327,35 @@ async def Get_AI_Response(user_input):
                 return f"Sorry to say but something wrong in AI response: {error_msg}"
 
 # Player info functions
+async def get_player_name_from_spam_service(uid):
+    """Get player name from spam service with detailed logging"""
+    try:
+        print(f"Getting player name for UID: {uid} from spam service")
+        async with aiohttp.ClientSession() as session:
+            spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
+            print(f"Calling spam service: {spam_url}")
+            async with session.get(spam_url, timeout=10) as response:
+                print(f"Spam service response status: {response.status}")
+                if response.status == 200:
+                    data = await response.json()
+                    print(f"Spam service response: {data}")
+                    player_name = data.get('player_name', '')
+                    print(f"Extracted player name: '{player_name}'")
+                    if not player_name or not player_name.strip():
+                        print("Player name is empty or whitespace")
+                        return None
+                    else:
+                        print(f"Successfully got player name: {player_name}")
+                        return player_name
+                else:
+                    print(f"Spam service returned status {response.status}")
+                    return None
+    except Exception as e:
+        print(f"Error getting player name from spam service: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
 def encrypt_message(plaintext):
     try:
         key = b'Yg&tc%DEuh6%Zc^8'
