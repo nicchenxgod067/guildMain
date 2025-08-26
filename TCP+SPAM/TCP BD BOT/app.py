@@ -1157,10 +1157,11 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                     success_count = data.get('success_count', 0)
                                                     failed_count = data.get('failed_count', 0)
                                                     total_requests = data.get('total_requests', 0)
+                                                    player_name = data.get('player_name', 'Unknown')
                                                     
-                                                    print(f"Counts - Success: {success_count}, Failed: {failed_count}, Total: {total_requests}")  # Debug print
+                                                    print(f"Counts - Success: {success_count}, Failed: {failed_count}, Total: {total_requests}, Player: {player_name}")  # Debug print
                                                     
-                                                    if success_count > 0 or (success_count == 0 and failed_count == 0):
+                                                    if success_count > 0:
                                                         # Success case - show actual counts from response
                                                         success_msg = "[00FF00]✅ Spam friend request sent successfully!"
                                                         if chat_id == 3037318759:
@@ -1177,6 +1178,8 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         await send_field("success_count", str(success_count))
                                                         await send_field("failed_count", str(failed_count))
                                                         await send_field("total_requests", str(total_requests))
+                                                        if player_name and player_name != 'Unknown':
+                                                            await send_field("player_name", player_name)
                                                         
                                                         completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
                                                         if chat_id == 3037318759:
@@ -1188,7 +1191,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                             await writer.drain()
                                                             print("Completion message sent")  # Debug print
                                                     else:
-                                                        # Error case
+                                                        # Error case - all requests failed
                                                         error_msg = f"[FF0000]❌ Failed to send friend request"
                                                         if chat_id == 3037318759:
                                                             msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
@@ -1203,6 +1206,8 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         await send_field("success_count", str(success_count))
                                                         await send_field("failed_count", str(failed_count))
                                                         await send_field("total_requests", str(total_requests))
+                                                        if player_name and player_name != 'Unknown':
+                                                            await send_field("player_name", player_name)
                                                         
                                                         completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
                                                         if chat_id == 3037318759:
