@@ -892,8 +892,8 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                 else:
                                     msg_packet = await send_msg(msg, uid, key, iv)
                                 if msg_packet and not writer.is_closing():
-                                    writer.write(msg_packet)
-                                    await writer.drain()
+                                writer.write(msg_packet)
+                                await writer.drain()
                                     await asyncio.sleep(0.3)  # Faster response
                                 else:
                                     print("Warning: Could not send help message - writer is closing or packet is None")
@@ -1148,25 +1148,25 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                 
                                 # Send initial response
                                 initial_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST STATUS[/B] 🚀"
-                                if chat_id == 3037318759:
+                                                    if chat_id == 3037318759:
                                     msg_packet = await send_clan_msg(initial_msg, chat_id, key, iv)
-                                else:
+                                                    else:
                                     msg_packet = await send_msg(initial_msg, uid, key, iv)
-                                if msg_packet:
-                                    writer.write(msg_packet)
-                                    await writer.drain()
-                                    await asyncio.sleep(0.3)
+                                                    if msg_packet:
+                                                        writer.write(msg_packet)
+                                                        await writer.drain()
+                                                        await asyncio.sleep(0.3)
                                 
                                 # Send UID message
-                                uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
-                                if chat_id == 3037318759:
-                                    msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
-                                else:
-                                    msg_packet = await send_msg(uid_msg, uid, key, iv)
-                                if msg_packet:
-                                    writer.write(msg_packet)
-                                    await writer.drain()
-                                    await asyncio.sleep(0.3)
+                                                    uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
+                                                    if chat_id == 3037318759:
+                                                        msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
+                                                    else:
+                                                        msg_packet = await send_msg(uid_msg, uid, key, iv)
+                                                    if msg_packet:
+                                                        writer.write(msg_packet)
+                                                        await writer.drain()
+                                                        await asyncio.sleep(0.3)
                                 
                                 # Send processing message
                                 test_msg = "[FFFF00]🔄 Processing spam request..."
@@ -1277,7 +1277,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
                                                         if chat_id == 3037318759:
                                                             msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
-                                                        else:
+                                                    else:
                                                             msg_packet = await send_msg(completion_msg, uid, key, iv)
                                                         if msg_packet:
                                                             writer.write(msg_packet)
@@ -1310,36 +1310,36 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                             async with session.post(fallback_url, headers=headers, data=bytes.fromhex(encrypted_payload), timeout=20) as fallback_response:
                                                                 if fallback_response.status == 200:
                                                                     success_msg = "[00FF00]✅ Friend request sent successfully (fallback method)!"
-                                                                    if chat_id == 3037318759:
-                                                                        msg_packet = await send_clan_msg(success_msg, chat_id, key, iv)
-                                                                    else:
-                                                                        msg_packet = await send_msg(success_msg, uid, key, iv)
-                                                                    if msg_packet:
-                                                                        writer.write(msg_packet)
-                                                                        await writer.drain()
+                                                        if chat_id == 3037318759:
+                                                            msg_packet = await send_clan_msg(success_msg, chat_id, key, iv)
+                                                        else:
+                                                            msg_packet = await send_msg(success_msg, uid, key, iv)
+                                                        if msg_packet:
+                                                            writer.write(msg_packet)
+                                                            await writer.drain()
                                                                     
                                                                     await send_field("success_count", "1")
                                                                     await send_field("failed_count", "0")
                                                                     await send_field("total_requests", "1")
                                                                     
                                                                     completion_msg = "[FF69B4]🚀 [B]FRIEND REQUEST SENT (FALLBACK)[/B] 🚀"
-                                                                    if chat_id == 3037318759:
-                                                                        msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
-                                                                    else:
-                                                                        msg_packet = await send_msg(completion_msg, uid, key, iv)
-                                                                    if msg_packet:
-                                                                        writer.write(msg_packet)
-                                                                        await writer.drain()
+                                                        if chat_id == 3037318759:
+                                                            msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
+                                                        else:
+                                                            msg_packet = await send_msg(completion_msg, uid, key, iv)
+                                                        if msg_packet:
+                                                            writer.write(msg_packet)
+                                                            await writer.drain()
                                                                 else:
                                                                     error_msg = f"[FF0000]❌ Fallback also failed: Status {fallback_response.status}"
-                                                                    if chat_id == 3037318759:
-                                                                        msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
-                                                                    else:
-                                                                        msg_packet = await send_msg(error_msg, uid, key, iv)
-                                                                    if msg_packet:
-                                                                        writer.write(msg_packet)
-                                                                        await writer.drain()
-                                                        else:
+                                                    if chat_id == 3037318759:
+                                                        msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                                    else:
+                                                        msg_packet = await send_msg(error_msg, uid, key, iv)
+                                                    if msg_packet:
+                                                        writer.write(msg_packet)
+                                                        await writer.drain()
+                                            else:
                                                             error_msg = "[FF0000]❌ Failed to encrypt UID for friend request"
                                                             if chat_id == 3037318759:
                                                                 msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
@@ -1397,17 +1397,17 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                 "Example: [00FFFF]/spam 1234567890\n"
                                 "[00FF00]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                             )
-                            if chat_id == 3037318759:
-                                msg_packet = await send_clan_msg(message, chat_id, key, iv)
-                            else:
-                                msg_packet = await send_msg(message, uid, key, iv)
+                        if chat_id == 3037318759:
+                            msg_packet = await send_clan_msg(message, chat_id, key, iv)
+                        else:
+                            msg_packet = await send_msg(message, uid, key, iv)
                             if msg_packet:
-                                writer.write(msg_packet)
-                                await writer.drain()
+                        writer.write(msg_packet)
+                        await writer.drain()
             try:
                 if not writer.is_closing():
-                    writer.close()
-                    await writer.wait_closed()
+            writer.close()
+            await writer.wait_closed()
             except Exception as e:
                 print(f"Error closing writer: {e}")
         except asyncio.CancelledError:
@@ -1930,11 +1930,11 @@ def spam_friend():
         try:
             with open('spam_config.json', 'r') as f:
                 spam_config = json.load(f)
-            spam_api_url = spam_config.get("spam_api_url", "https://your-spam-app.vercel.app/send_requests")
+            spam_api_url = spam_config.get("spam_api_url", "https://spam-friend-red.vercel.app/send_requests")
             timeout = spam_config.get("timeout", 60)
             enabled = spam_config.get("enabled", True)
         except Exception:
-            spam_api_url = "https://your-spam-app.vercel.app/send_requests"
+            spam_api_url = "https://spam-friend-red.vercel.app/send_requests"
             timeout = 60
             enabled = True
         
