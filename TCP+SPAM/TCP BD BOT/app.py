@@ -811,20 +811,18 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                     uid = response.Data.uid
                     chat_id = response.Data.Chat_ID
                     if command == "hi":
-                        # Get player name from UID
+                        # Get player name from UID using spam service directly
                         player_name = "User"
                         try:
-                            with bot_tokens_lock:
-                                bot_token = bot_tokens.get(bot_name)
-                            if bot_token:
-                                # Try to get player name from the spam service
-                                player_name = await get_player_info(uid, bot_token)
-                                if not player_name:
-                                    player_name = "User"
-                                else:
-                                    player_name = player_name or "User"
-                            else:
-                                player_name = "User"
+                            # Use spam service directly to get player name
+                            async with aiohttp.ClientSession() as session:
+                                spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
+                                async with session.get(spam_url, timeout=10) as response:
+                                    if response.status == 200:
+                                        data = await response.json()
+                                        player_name = data.get('player_name', '')
+                                        if not player_name or not player_name.strip():
+                                            player_name = "User"
                         except Exception as e:
                             print(f"Error getting player name: {e}")
                             player_name = "User"
@@ -837,20 +835,18 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                         writer.write(msg_packet)
                         await writer.drain()
                     elif command == "/help":
-                        # Get player name from UID
+                        # Get player name from UID using spam service directly
                         player_name = "User"
                         try:
-                            with bot_tokens_lock:
-                                bot_token = bot_tokens.get(bot_name)
-                            if bot_token:
-                                # Try to get player name from the spam service
-                                player_name = await get_player_info(uid, bot_token)
-                                if not player_name:
-                                    player_name = "User"
-                                else:
-                                    player_name = player_name or "User"
-                            else:
-                                player_name = "User"
+                            # Use spam service directly to get player name
+                            async with aiohttp.ClientSession() as session:
+                                spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
+                                async with session.get(spam_url, timeout=10) as response:
+                                    if response.status == 200:
+                                        data = await response.json()
+                                        player_name = data.get('player_name', '')
+                                        if not player_name or not player_name.strip():
+                                            player_name = "User"
                         except Exception as e:
                             print(f"Error getting player name: {e}")
                             player_name = "User"
@@ -1129,36 +1125,31 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                         if len(parts) > 1 and parts[1].isdigit():
                             target_uid = parts[1]
                             try:
-                                print(f"Spam command received for UID: {target_uid}")  # Debug print
+                                print(f"Spam command received for UID: {target_uid}")
                                 
-                                # Send initial response to show the command was received
+                                # Send initial response
                                 initial_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST STATUS[/B] 🚀"
-                                                    if chat_id == 3037318759:
+                                if chat_id == 3037318759:
                                     msg_packet = await send_clan_msg(initial_msg, chat_id, key, iv)
-                                                    else:
+                                else:
                                     msg_packet = await send_msg(initial_msg, uid, key, iv)
-                                                    if msg_packet:
-                                                        writer.write(msg_packet)
-                                                        await writer.drain()
-                                                        await asyncio.sleep(0.3)
-                                    print("Initial message sent successfully")  # Debug print
-                                else:
-                                    print("Failed to create initial message packet")  # Debug print
+                                if msg_packet:
+                                    writer.write(msg_packet)
+                                    await writer.drain()
+                                    await asyncio.sleep(0.3)
                                 
-                                                    uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
-                                                    if chat_id == 3037318759:
-                                                        msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
-                                                    else:
-                                                        msg_packet = await send_msg(uid_msg, uid, key, iv)
-                                                    if msg_packet:
-                                                        writer.write(msg_packet)
-                                                        await writer.drain()
-                                                        await asyncio.sleep(0.3)
-                                    print("UID message sent successfully")  # Debug print
+                                # Send UID message
+                                uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
+                                if chat_id == 3037318759:
+                                    msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
                                 else:
-                                    print("Failed to create UID message packet")  # Debug print
+                                    msg_packet = await send_msg(uid_msg, uid, key, iv)
+                                if msg_packet:
+                                    writer.write(msg_packet)
+                                    await writer.drain()
+                                    await asyncio.sleep(0.3)
                                 
-                                # Send a test message to verify communication
+                                # Send processing message
                                 test_msg = "[FFFF00]🔄 Processing spam request..."
                                 if chat_id == 3037318759:
                                     msg_packet = await send_clan_msg(test_msg, chat_id, key, iv)
@@ -1168,20 +1159,19 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                     writer.write(msg_packet)
                                     await writer.drain()
                                     await asyncio.sleep(0.3)
-                                    print("Test message sent successfully")  # Debug print
                                 
+                                # Call spam service
                                 async with aiohttp.ClientSession() as session:
-                                    # Use the external spam service directly
                                     spam_api_url = "https://spam-friend-red.vercel.app/send_requests"
                                     url = f"{spam_api_url}?uid={target_uid}"
-                                    print(f"Calling spam API: {url}")  # Debug print
+                                    print(f"Calling spam API: {url}")
                                     
                                     try:
                                         async with session.get(url, timeout=30) as response:
-                                            print(f"API Response Status: {response.status}")  # Debug print
+                                            print(f"API Response Status: {response.status}")
                                             if response.status == 200:
                                                 data = await response.json()
-                                                print(f"Spam API Response: {data}")  # Debug print
+                                                print(f"Spam API Response: {data}")
                                                 
                                                 async def send_field(field_name, field_value):
                                                     try:
@@ -1196,20 +1186,18 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                             await asyncio.sleep(0.5)
                                                         return True
                                                     except Exception as e:
-                                                        print(f"Error sending field {field_name}: {e}")  # Debug print
+                                                        print(f"Error sending field {field_name}: {e}")
                                                         return False
                                                 
                                                 try:
-                                                    # Check if response has success/failure counts
                                                     success_count = data.get('success_count', 0)
                                                     failed_count = data.get('failed_count', 0)
                                                     total_requests = data.get('total_requests', 0)
                                                     player_name = data.get('player_name', 'Unknown')
                                                     
-                                                    print(f"Counts - Success: {success_count}, Failed: {failed_count}, Total: {total_requests}, Player: {player_name}")  # Debug print
+                                                    print(f"Counts - Success: {success_count}, Failed: {failed_count}, Total: {total_requests}, Player: {player_name}")
                                                     
                                                     if success_count > 0:
-                                                        # Success case - show actual counts from response
                                                         success_msg = "[00FF00]✅ Spam friend request sent successfully!"
                                                         if chat_id == 3037318759:
                                                             msg_packet = await send_clan_msg(success_msg, chat_id, key, iv)
@@ -1219,9 +1207,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                             writer.write(msg_packet)
                                                             await writer.drain()
                                                             await asyncio.sleep(0.5)
-                                                            print("Success message sent")  # Debug print
                                                         
-                                                        # Send actual counts from response
                                                         await send_field("success_count", str(success_count))
                                                         await send_field("failed_count", str(failed_count))
                                                         await send_field("total_requests", str(total_requests))
@@ -1231,15 +1217,13 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
                                                         if chat_id == 3037318759:
                                                             msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
-                                                    else:
+                                                        else:
                                                             msg_packet = await send_msg(completion_msg, uid, key, iv)
                                                         if msg_packet:
                                                             writer.write(msg_packet)
                                                             await writer.drain()
-                                                            print("Completion message sent")  # Debug print
                                                     else:
-                                                        # Error case - all requests failed
-                                                        error_msg = f"[FF0000]❌ Failed to send friend request"
+                                                        error_msg = "[FF0000]❌ Failed to send friend request"
                                                         if chat_id == 3037318759:
                                                             msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
                                                         else:
@@ -1247,9 +1231,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         if msg_packet:
                                                             writer.write(msg_packet)
                                                             await writer.drain()
-                                                            print("Error message sent")  # Debug print
                                                         
-                                                        # Send failure details
                                                         await send_field("success_count", str(success_count))
                                                         await send_field("failed_count", str(failed_count))
                                                         await send_field("total_requests", str(total_requests))
@@ -1264,7 +1246,6 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         if msg_packet:
                                                             writer.write(msg_packet)
                                                             await writer.drain()
-                                                            print("Completion message sent")  # Debug print
                                                 except Exception as e:
                                                     print(f"Error processing spam response: {e}")
                                                     error_msg = "[FF0000]❌ An error occurred while processing the response."
@@ -1297,16 +1278,6 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                             writer.write(msg_packet)
                                             await writer.drain()
                             except Exception as e:
-                                        print(f"Spam API Exception: {e}")
-                                        error_msg = f"[FF0000]❌ Error: {str(e)}"
-                                        if chat_id == 3037318759:
-                                            msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
-                                        else:
-                                            msg_packet = await send_msg(error_msg, uid, key, iv)
-                                        if msg_packet:
-                                            writer.write(msg_packet)
-                                            await writer.drain()
-                            except Exception as e:
                                 print(f"Spam command exception: {e}")
                                 error_msg = f"[FF0000]❌ Error: {str(e)}"
                                 if chat_id == 3037318759:
@@ -1324,12 +1295,13 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                 "Example: [00FFFF]/spam 1234567890\n"
                                 "[00FF00]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                             )
-                        if chat_id == 3037318759:
-                            msg_packet = await send_clan_msg(message, chat_id, key, iv)
-                        else:
-                            msg_packet = await send_msg(message, uid, key, iv)
-                        writer.write(msg_packet)
-                        await writer.drain()
+                            if chat_id == 3037318759:
+                                msg_packet = await send_clan_msg(message, chat_id, key, iv)
+                            else:
+                                msg_packet = await send_msg(message, uid, key, iv)
+                            if msg_packet:
+                                writer.write(msg_packet)
+                                await writer.drain()
             writer.close()
             await writer.wait_closed()
         except asyncio.CancelledError:
@@ -1389,40 +1361,7 @@ def enc(uid):
     encrypted_uid = encrypt_message(protobuf_data)
     return encrypted_uid
 
-async def get_player_info(uid, token):
-    """Get player name using the spam service API since it's already working"""
-    try:
-        print(f"Getting player info for UID: {uid} via spam service")  # Debug print
-        
-        # Use the spam service API directly since it's already working
-        async with aiohttp.ClientSession() as session:
-            spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
-            print(f"Calling spam service: {spam_url}")  # Debug print
-            
-            async with session.get(spam_url, timeout=10) as response:
-                print(f"Spam service response status: {response.status}")  # Debug print
-                
-                if response.status == 200:
-                    data = await response.json()
-                    print(f"Spam service response: {data}")  # Debug print
-                    
-                    player_name = data.get('player_name', '')
-                    print(f"Retrieved player name from spam service: {player_name}")  # Debug print
-                    
-                    if player_name and player_name.strip():
-                        return player_name
-                    else:
-                        print("Player name is empty from spam service")  # Debug print
-                        return None
-                else:
-                    print(f"Spam service failed with status: {response.status}")  # Debug print
-                    return None
-                    
-    except Exception as e:
-        print(f"Error in get_player_info: {e}")  # Debug print
-        import traceback
-        traceback.print_exc()
-        return None
+
 
 # Account management functions
 def load_accounts():
