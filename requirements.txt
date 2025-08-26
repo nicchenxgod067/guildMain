@@ -1,0 +1,9 @@
+Flask[async]
+gunicorn
+requests
+aiohttp
+protobuf
+pycryptodome
+PyJWT
+PyYAML
+
