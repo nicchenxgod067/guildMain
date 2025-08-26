@@ -1082,135 +1082,120 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                         if len(parts) > 1 and parts[1].isdigit():
                             target_uid = parts[1]
                             try:
-                                # Get token from bot's token storage
-                                with bot_tokens_lock:
-                                    bot_token = bot_tokens.get(bot_name)
-                                
-                                if not bot_token:
-                                    error_msg = "[FF0000]❌ Bot token not available. Please wait for bot to fully connect."
-                                    if chat_id == 3037318759:
-                                        msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
-                                    else:
-                                        msg_packet = await send_msg(error_msg, uid, key, iv)
-                                    if msg_packet:
-                                        writer.write(msg_packet)
-                                        await writer.drain()
-                                    return
-                                
-                                # Use bot's own built-in friend request functionality
-                                encrypted_id = encode_uid(target_uid)
-                                payload = f"08a7c4839f1e10{encrypted_id}1801"
-                                encrypted_payload = encrypt_api(payload)
-                                url = API_ENDPOINTS['ADD_FRIEND']
-                                headers = _get_headers(bot_token)
-                                
-                                # Send friend request using bot's own token
-                                response = requests.post(url, headers=headers, data=bytes.fromhex(encrypted_payload), timeout=20)
-                                
-                                try:
-                                    header_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST STATUS[/B] 🚀"
-                                    if chat_id == 3037318759:
-                                        msg_packet = await send_clan_msg(header_msg, chat_id, key, iv)
-                                    else:
-                                        msg_packet = await send_msg(header_msg, uid, key, iv)
-                                    if msg_packet:
-                                        writer.write(msg_packet)
-                                        await writer.drain()
-                                        await asyncio.sleep(0.3)
-                                except Exception:
-                                    pass
-                                
-                                try:
-                                    uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
-                                    if chat_id == 3037318759:
-                                        msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
-                                    else:
-                                        msg_packet = await send_msg(uid_msg, uid, key, iv)
-                                    if msg_packet:
-                                        writer.write(msg_packet)
-                                        await writer.drain()
-                                        await asyncio.sleep(0.3)
-                                except Exception:
-                                    pass
-                                
-                                if response.status_code == 200:
-                                    success_msg = "[00FF00]✅ Friend request sent successfully!"
-                                    if chat_id == 3037318759:
-                                        msg_packet = await send_clan_msg(success_msg, chat_id, key, iv)
-                                    else:
-                                        msg_packet = await send_msg(success_msg, uid, key, iv)
-                                    if msg_packet:
-                                        writer.write(msg_packet)
-                                        await writer.drain()
-                                        await asyncio.sleep(0.5)
+                                async with aiohttp.ClientSession() as session:
+                                    # Use the external spam service from the user's spam repository
+                                    spam_api_url = "https://spam-friend-red.vercel.app/send_requests"
+                                    url = f"{spam_api_url}?uid={target_uid}"
                                     
-                                    # Send success details
-                                    async def send_field(field_name, field_value):
-                                        try:
-                                            field_msg = f"[00FF7F]• {field_name}: [B]{field_value}[/B]"
-                                            if chat_id == 3037318759:
-                                                packet = await send_clan_msg(field_msg, chat_id, key, iv)
+                                    try:
+                                        async with session.get(url, timeout=30) as response:
+                                            if response.status == 200:
+                                                data = await response.json()
+                                                try:
+                                                    header_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST STATUS[/B] 🚀"
+                                                    if chat_id == 3037318759:
+                                                        msg_packet = await send_clan_msg(header_msg, chat_id, key, iv)
+                                                    else:
+                                                        msg_packet = await send_msg(header_msg, uid, key, iv)
+                                                    if msg_packet:
+                                                        writer.write(msg_packet)
+                                                        await writer.drain()
+                                                        await asyncio.sleep(0.3)
+                                                except Exception:
+                                                    pass
+                                                
+                                                try:
+                                                    uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
+                                                    if chat_id == 3037318759:
+                                                        msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
+                                                    else:
+                                                        msg_packet = await send_msg(uid_msg, uid, key, iv)
+                                                    if msg_packet:
+                                                        writer.write(msg_packet)
+                                                        await writer.drain()
+                                                        await asyncio.sleep(0.3)
+                                                except Exception:
+                                                    pass
+                                                
+                                                async def send_field(field_name, field_value):
+                                                    try:
+                                                        field_msg = f"[00FF7F]• {field_name}: [B]{field_value}[/B]"
+                                                        if chat_id == 3037318759:
+                                                            packet = await send_clan_msg(field_msg, chat_id, key, iv)
+                                                        else:
+                                                            packet = await send_msg(field_msg, uid, key, iv)
+                                                        if packet:
+                                                            writer.write(packet)
+                                                            await writer.drain()
+                                                            await asyncio.sleep(0.5)
+                                                        return True
+                                                    except Exception:
+                                                        return False
+                                                
+                                                try:
+                                                    if 'data' in data and 'message' in data['data']:
+                                                        error_msg = f"[FF0000]❌ {data['data']['message']}"
+                                                        if chat_id == 3037318759:
+                                                            msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                                        else:
+                                                            msg_packet = await send_msg(error_msg, uid, key, iv)
+                                                        if msg_packet:
+                                                            writer.write(msg_packet)
+                                                            await writer.drain()
+                                                    else:
+                                                        success_msg = "[00FF00]✅ Spam friend request sent successfully!"
+                                                        if chat_id == 3037318759:
+                                                            msg_packet = await send_clan_msg(success_msg, chat_id, key, iv)
+                                                        else:
+                                                            msg_packet = await send_msg(success_msg, uid, key, iv)
+                                                        if msg_packet:
+                                                            writer.write(msg_packet)
+                                                            await writer.drain()
+                                                            await asyncio.sleep(0.5)
+                                                        
+                                                        for field, value in data.items():
+                                                            if field not in ['status', 'success', 'data'] and not field.startswith('_'):
+                                                                await send_field(field, value)
+                                                        if 'data' in data and isinstance(data['data'], dict):
+                                                            for field, value in data['data'].items():
+                                                                if field not in ['status', 'success'] and not field.startswith('_'):
+                                                                    await send_field(field, value)
+                                                        
+                                                        completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
+                                                        if chat_id == 3037318759:
+                                                            msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
+                                                        else:
+                                                            msg_packet = await send_msg(completion_msg, uid, key, iv)
+                                                        if msg_packet:
+                                                            writer.write(msg_packet)
+                                                            await writer.drain()
+                                                except Exception:
+                                                    error_msg = "[FF0000]❌ An error occurred while processing the response."
+                                                    if chat_id == 3037318759:
+                                                        msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                                    else:
+                                                        msg_packet = await send_msg(error_msg, uid, key, iv)
+                                                    if msg_packet:
+                                                        writer.write(msg_packet)
+                                                        await writer.drain()
                                             else:
-                                                packet = await send_msg(field_msg, uid, key, iv)
-                                            if packet:
-                                                writer.write(packet)
-                                                await writer.drain()
-                                                await asyncio.sleep(0.5)
-                                            return True
-                                        except Exception:
-                                            return False
-                                    
-                                    await send_field("success_count", "1")
-                                    await send_field("failed_count", "0")
-                                    await send_field("total_requests", "1")
-                                    
-                                    completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
-                                    if chat_id == 3037318759:
-                                        msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
-                                    else:
-                                        msg_packet = await send_msg(completion_msg, uid, key, iv)
-                                    if msg_packet:
-                                        writer.write(msg_packet)
-                                        await writer.drain()
-                                else:
-                                    error_msg = f"[FF0000]❌ Failed to send friend request (Status: {response.status_code})"
-                                    if chat_id == 3037318759:
-                                        msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
-                                    else:
-                                        msg_packet = await send_msg(error_msg, uid, key, iv)
-                                    if msg_packet:
-                                        writer.write(msg_packet)
-                                        await writer.drain()
-                                        
-                                    # Send failure details
-                                    async def send_field(field_name, field_value):
-                                        try:
-                                            field_msg = f"[00FF7F]• {field_name}: [B]{field_value}[/B]"
-                                            if chat_id == 3037318759:
-                                                packet = await send_clan_msg(field_msg, chat_id, key, iv)
-                                            else:
-                                                packet = await send_msg(field_msg, uid, key, iv)
-                                            if packet:
-                                                writer.write(packet)
-                                                await writer.drain()
-                                                await asyncio.sleep(0.5)
-                                            return True
-                                        except Exception:
-                                            return False
-                                    
-                                    await send_field("success_count", "0")
-                                    await send_field("failed_count", "1")
-                                    await send_field("total_requests", "1")
-                                    
-                                    completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
-                                    if chat_id == 3037318759:
-                                        msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
-                                    else:
-                                        msg_packet = await send_msg(completion_msg, uid, key, iv)
-                                    if msg_packet:
-                                        writer.write(msg_packet)
-                                        await writer.drain()
-                                        
+                                                message = f"[FF0000]❌ Error: Received status code {response.status}"
+                                                if chat_id == 3037318759:
+                                                    msg_packet = await send_clan_msg(message, chat_id, key, iv)
+                                                else:
+                                                    msg_packet = await send_msg(message, uid, key, iv)
+                                                if msg_packet:
+                                                    writer.write(msg_packet)
+                                                    await writer.drain()
+                                    except asyncio.TimeoutError:
+                                        message = "[FF0000]❌ Error: Request timed out. Please try again later."
+                                        if chat_id == 3037318759:
+                                            msg_packet = await send_clan_msg(message, chat_id, key, iv)
+                                        else:
+                                            msg_packet = await send_msg(message, uid, key, iv)
+                                        if msg_packet:
+                                            writer.write(msg_packet)
+                                            await writer.drain()
                             except Exception as e:
                                 error_msg = f"[FF0000]❌ Error: {str(e)}"
                                 if chat_id == 3037318759:
