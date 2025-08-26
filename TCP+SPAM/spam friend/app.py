@@ -11,86 +11,19 @@ import like_count_pb2
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 import binascii
-import os
-import time
 
 app = Flask(__name__)
-
-# Constants
-TOKENS_FILE = "token_bd.json"
-INPUT_FILE = "input_bd.json"
-JWT_SERVICE_URL = "https://tcp1-two.vercel.app/jwt/cloudgen_jwt"
-TOKEN_TTL_SECONDS = 7 * 60 * 60  # refresh proactively every 7h
-BACKGROUND_REFRESH_SECONDS = 7 * 60 * 60
 
 # Function to load tokens from token_bd.json
 def load_tokens():
     try:
-        # Auto refresh if file missing or too old
-        needs_refresh = False
-        if not os.path.exists(TOKENS_FILE):
-            needs_refresh = True
-        else:
-            try:
-                mtime = os.path.getmtime(TOKENS_FILE)
-                age = time.time() - mtime
-                if age > TOKEN_TTL_SECONDS:
-                    needs_refresh = True
-            except Exception:
-                needs_refresh = True
-
-        if needs_refresh:
-            print("♻️ Tokens file missing or stale; refreshing tokens...")
-            try:
-                _ = refresh_tokens()
-            except Exception as e:
-                print(f"⚠️ Token refresh failed: {e}")
-
-        with open(TOKENS_FILE, "r", encoding="utf-8") as f:
+        with open("token_bd.json", "r", encoding="utf-8") as f:
             data = json.load(f)
             tokens = [item["token"] for item in data]
             return tokens
     except Exception as e:
-        print(f"Error loading tokens from {TOKENS_FILE}: {e}")
+        print(f"Error loading tokens from token_bd.json: {e}")
         return []
-
-def refresh_tokens():
-    try:
-        if not os.path.exists(INPUT_FILE):
-            raise FileNotFoundError(f"{INPUT_FILE} not found")
-        with open(INPUT_FILE, "r", encoding="utf-8") as f:
-            input_data = json.load(f)
-        print(f"🔑 Refreshing tokens via JWT service: {JWT_SERVICE_URL}")
-        response = requests.post(
-            JWT_SERVICE_URL,
-            json=input_data,
-            headers={"Content-Type": "application/json"},
-            timeout=300
-        )
-        if response.status_code != 200:
-            raise RuntimeError(f"JWT service error {response.status_code}: {response.text[:160]}")
-        tokens_data = response.json()
-        successful_tokens = [item for item in tokens_data if item.get("status") == "live" and item.get("token")]
-        if not successful_tokens:
-            raise RuntimeError("No live tokens returned from JWT service")
-        output_data = [{"token": item["token"]} for item in successful_tokens]
-        with open(TOKENS_FILE, "w", encoding="utf-8") as f:
-            json.dump(output_data, f, indent=4, ensure_ascii=False)
-        print(f"💾 Saved {len(output_data)} fresh tokens to {TOKENS_FILE}")
-        return [t["token"] for t in output_data]
-    except Exception as e:
-        print(f"❌ Failed to refresh tokens: {e}")
-        raise
-
-def _background_refresher():
-    while True:
-        try:
-            print("⏲️ Background token refresh tick")
-            refresh_tokens()
-        except Exception as e:
-            print(f"Background refresh error: {e}")
-        # Sleep regardless to avoid tight loop
-        time.sleep(BACKGROUND_REFRESH_SECONDS)
 
 # Encryption functions for player info
 def encrypt_message(plaintext):
@@ -194,9 +127,6 @@ def send_friend_request(uid, token, results):
         else:
             print(f"❌ Friend request failed for UID {uid}, status: {response.status_code}, response: {response.text[:100]}")
             results["failed"] += 1
-            if response.status_code in (401, 403):
-                results.setdefault("expired", 0)
-                results["expired"] += 1
             
     except requests.exceptions.Timeout:
         print(f"⏰ Timeout for UID {uid}")
@@ -234,8 +164,8 @@ def debug_tokens():
         
         for i, token_data in enumerate(tokens[:5]):  # Only check first 5 tokens
             try:
-                # Basic token validation
-                token = token_data.get("token", "")
+                # Basic token validation - token_data is already the token string
+                token = token_data
                 if len(token) > 100:  # Basic length check
                     token_info.append({
                         "index": i,
@@ -275,12 +205,8 @@ def send_requests():
     
     tokens = load_tokens()
     if not tokens:
-        print("❌ No tokens found. Attempting automatic refresh...")
-        try:
-            tokens = refresh_tokens()
-        except Exception as e:
-            print("❌ Automatic token refresh failed")
-            return jsonify({"error": "No tokens available and refresh failed", "details": str(e)}), 500
+        print("❌ No tokens found in token_bd.json")
+        return jsonify({"error": "No tokens found from token_bd.json"}), 500
 
     print(f"📱 Loaded {len(tokens)} tokens from token_bd.json")
 
@@ -295,7 +221,7 @@ def send_requests():
         print(f"⚠️ Error getting player name: {e}")
         player_name = None
 
-    results = {"success": 0, "failed": 0, "expired": 0}
+    results = {"success": 0, "failed": 0}
     threads = []
 
     # Use all available tokens for maximum friend requests
@@ -310,24 +236,6 @@ def send_requests():
     for thread in threads:
         thread.join()
 
-    # If most requests failed due to expired tokens, refresh and retry once
-    total_requests = results["success"] + results["failed"]
-    if total_requests > 0 and results.get("expired", 0) >= max(1, int(0.5 * total_requests)):
-        print("🔁 Detected many expired tokens. Refreshing and retrying once...")
-        try:
-            tokens = refresh_tokens()
-            # Reset results for retry
-            results = {"success": 0, "failed": 0, "expired": 0}
-            threads = []
-            for token in tokens:
-                thread = threading.Thread(target=send_friend_request, args=(uid, token, results))
-                threads.append(thread)
-                thread.start()
-            for thread in threads:
-                thread.join()
-        except Exception as e:
-            print(f"⚠️ Retry after refresh failed: {e}")
-
     total_requests = results["success"] + results["failed"]
     status = 1 if results["success"] != 0 else 2  # 1 if success, 2 if all failed
 
@@ -336,7 +244,6 @@ def send_requests():
     response_data = {
         "success_count": results["success"],
         "failed_count": results["failed"],
-        "expired_count": results.get("expired", 0),
         "status": status,
         "total_requests": total_requests
     }
@@ -346,19 +253,5 @@ def send_requests():
 
     return jsonify(response_data)
 
-@app.route("/refresh_tokens", methods=["POST"])
-def manual_refresh_tokens():
-    try:
-        tokens = refresh_tokens()
-        return jsonify({"message": "tokens refreshed", "count": len(tokens)})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 if __name__ == "__main__":
-    # Start background refresher
-    try:
-        t = threading.Thread(target=_background_refresher, daemon=True)
-        t.start()
-    except Exception as e:
-        print(f"Failed to start background refresher: {e}")
     app.run(debug=True, host="0.0.0.0", port=5000)

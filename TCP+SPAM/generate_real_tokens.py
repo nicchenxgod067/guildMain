@@ -23,7 +23,7 @@ def generate_real_tokens():
         print(f"❌ Error loading input_bd.json: {e}")
         return
     
-    # Your hosted JWT converter service URL
+    # Your hosted JWT converter service URL - Correct endpoint from Vercel dashboard
     jwt_service_url = "https://tcp1-two.vercel.app/jwt/cloudgen_jwt"
     
     print(f"🔄 Sending data to your hosted JWT converter at {jwt_service_url}")
@@ -77,7 +77,17 @@ def generate_real_tokens():
                 
         else:
             print(f"❌ JWT converter service error: {response.status_code}")
-            print(f"   Response: {response.text[:200]}")
+            print(f"   Response: {response.text[:500]}")
+            print(f"   Headers: {dict(response.headers)}")
+            print(f"   URL: {jwt_service_url}")
+            
+            # Try to get more info about the error
+            if response.status_code == 500:
+                print("   🔍 500 Error suggests server-side issue")
+                print("   💡 Check your Vercel deployment logs")
+            elif response.status_code == 404:
+                print("   🔍 404 Error suggests wrong endpoint")
+                print("   💡 Check the correct API endpoint URL")
             
     except requests.exceptions.ConnectionError:
         print("❌ Cannot connect to your hosted JWT converter service!")

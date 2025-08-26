@@ -1,0 +1,7 @@
+{
+    "spam_api_url": "https://spam-friend-58ahrppsr-nicchenxgods-projects.vercel.app/send_requests",
+    "description": "Configuration for spam friend request service",
+    "version": "2.0",
+    "deployed_at": "2025-08-24",
+    "status": "active"
+}

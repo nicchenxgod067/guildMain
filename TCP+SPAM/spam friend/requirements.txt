@@ -4,4 +4,3 @@ aiohttp
 protobuf
 pycryptodome
 PyJWT
-PyYAML
