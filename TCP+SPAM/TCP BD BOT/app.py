@@ -1083,7 +1083,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                             target_uid = parts[1]
                             try:
                                 # Send initial response to show the command was received
-                                initial_msg = f"[FF69B4]🚀 [B]SPAM FRIEND REQUEST STATUS[/B] 🚀"
+                                initial_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST STATUS[/B] 🚀"
                                 if chat_id == 3037318759:
                                     msg_packet = await send_clan_msg(initial_msg, chat_id, key, iv)
                                 else:
@@ -1104,7 +1104,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                     await asyncio.sleep(0.3)
                                 
                                 async with aiohttp.ClientSession() as session:
-                                    # Use the external spam service from the user's spam repository
+                                    # Use the external spam service directly
                                     spam_api_url = "https://spam-friend-red.vercel.app/send_requests"
                                     url = f"{spam_api_url}?uid={target_uid}"
                                     
