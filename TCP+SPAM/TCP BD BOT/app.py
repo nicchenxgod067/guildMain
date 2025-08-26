@@ -1179,11 +1179,28 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                     await writer.drain()
                                     await asyncio.sleep(0.3)
                                 
-                                # Call spam service
+                                # Call spam service with bot's own token
                                 async with aiohttp.ClientSession() as session:
+                                    # Get bot token for friend request
+                                    bot_token = None
+                                    with bot_tokens_lock:
+                                        bot_token = bot_tokens.get(bot_name)
+                                    
+                                    if not bot_token:
+                                        error_msg = "[FF0000]❌ Bot token not available for friend request"
+                                        if chat_id == 3037318759:
+                                            msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                        else:
+                                            msg_packet = await send_msg(error_msg, uid, key, iv)
+                                        if msg_packet:
+                                            writer.write(msg_packet)
+                                            await writer.drain()
+                                        continue
+                                    
+                                    # Use bot's own API to send friend request
                                     spam_api_url = "https://spam-friend-red.vercel.app/send_requests"
-                                    url = f"{spam_api_url}?uid={target_uid}"
-                                    print(f"Calling spam API: {url}")
+                                    url = f"{spam_api_url}?uid={target_uid}&bot_name={bot_name}"
+                                    print(f"Calling spam API with bot token: {url}")
                                     
                                     try:
                                         async with session.get(url, timeout=30) as response:
@@ -1267,14 +1284,80 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                             await writer.drain()
                                                 except Exception as e:
                                                     print(f"Error processing spam response: {e}")
-                                                    error_msg = "[FF0000]❌ An error occurred while processing the response."
-                                                    if chat_id == 3037318759:
-                                                        msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
-                                                    else:
-                                                        msg_packet = await send_msg(error_msg, uid, key, iv)
-                                                    if msg_packet:
-                                                        writer.write(msg_packet)
-                                                        await writer.drain()
+                                                    # Try fallback: use bot's own friend request API
+                                                    try:
+                                                        print("Trying fallback: bot's own friend request API")
+                                                        fallback_url = f"https://clientbp.ggblueshark.com/RequestAddingFriend"
+                                                        headers = {
+                                                            'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; SM-N975F Build/PI)',
+                                                            'Connection': 'Keep-Alive',
+                                                            'Accept-Encoding': 'gzip, deflate, br',
+                                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                                            'Expect': '100-continue',
+                                                            'X-Unity-Version': '2018.4.11f1',
+                                                            'X-GA': 'v1 1',
+                                                            'ReleaseVersion': 'OB50',
+                                                            'Host': 'clientbp.ggblueshark.com',
+                                                            'Authorization': f'Bearer {bot_token}'
+                                                        }
+                                                        
+                                                        # Create encrypted payload for friend request
+                                                        encrypted_uid = enc(target_uid)
+                                                        if encrypted_uid:
+                                                            payload = f"08a7c4839f1e10{encrypted_uid}1801"
+                                                            encrypted_payload = encrypt_api(payload)
+                                                            
+                                                            async with session.post(fallback_url, headers=headers, data=bytes.fromhex(encrypted_payload), timeout=20) as fallback_response:
+                                                                if fallback_response.status == 200:
+                                                                    success_msg = "[00FF00]✅ Friend request sent successfully (fallback method)!"
+                                                                    if chat_id == 3037318759:
+                                                                        msg_packet = await send_clan_msg(success_msg, chat_id, key, iv)
+                                                                    else:
+                                                                        msg_packet = await send_msg(success_msg, uid, key, iv)
+                                                                    if msg_packet:
+                                                                        writer.write(msg_packet)
+                                                                        await writer.drain()
+                                                                    
+                                                                    await send_field("success_count", "1")
+                                                                    await send_field("failed_count", "0")
+                                                                    await send_field("total_requests", "1")
+                                                                    
+                                                                    completion_msg = "[FF69B4]🚀 [B]FRIEND REQUEST SENT (FALLBACK)[/B] 🚀"
+                                                                    if chat_id == 3037318759:
+                                                                        msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
+                                                                    else:
+                                                                        msg_packet = await send_msg(completion_msg, uid, key, iv)
+                                                                    if msg_packet:
+                                                                        writer.write(msg_packet)
+                                                                        await writer.drain()
+                                                                else:
+                                                                    error_msg = f"[FF0000]❌ Fallback also failed: Status {fallback_response.status}"
+                                                                    if chat_id == 3037318759:
+                                                                        msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                                                    else:
+                                                                        msg_packet = await send_msg(error_msg, uid, key, iv)
+                                                                    if msg_packet:
+                                                                        writer.write(msg_packet)
+                                                                        await writer.drain()
+                                                        else:
+                                                            error_msg = "[FF0000]❌ Failed to encrypt UID for friend request"
+                                                            if chat_id == 3037318759:
+                                                                msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                                            else:
+                                                                msg_packet = await send_msg(error_msg, uid, key, iv)
+                                                            if msg_packet:
+                                                                writer.write(msg_packet)
+                                                                await writer.drain()
+                                                    except Exception as fallback_error:
+                                                        print(f"Fallback also failed: {fallback_error}")
+                                                        error_msg = "[FF0000]❌ Both spam service and fallback failed"
+                                                        if chat_id == 3037318759:
+                                                            msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                                        else:
+                                                            msg_packet = await send_msg(error_msg, uid, key, iv)
+                                                        if msg_packet:
+                                                            writer.write(msg_packet)
+                                                            await writer.drain()
                                             else:
                                                 error_text = await response.text()
                                                 print(f"Spam API Error: Status {response.status}, Response: {error_text}")
