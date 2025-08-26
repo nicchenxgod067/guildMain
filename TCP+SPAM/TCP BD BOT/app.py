@@ -817,20 +817,10 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                             with bot_tokens_lock:
                                 bot_token = bot_tokens.get(bot_name)
                             if bot_token:
-                                # Try to get player name from the game API
+                                # Try to get player name from the spam service
                                 player_name = await get_player_info(uid, bot_token)
                                 if not player_name:
-                                    # Fallback: try to get player name from spam service
-                                    try:
-                                        async with aiohttp.ClientSession() as session:
-                                            spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
-                                            async with session.get(spam_url, timeout=10) as response:
-                                                if response.status == 200:
-                                                    data = await response.json()
-                                                    player_name = data.get('player_name', 'User')
-                                    except Exception as spam_error:
-                                        print(f"Error getting player name from spam service: {spam_error}")
-                                        player_name = "User"
+                                    player_name = "User"
                                 else:
                                     player_name = player_name or "User"
                             else:
@@ -853,20 +843,10 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                             with bot_tokens_lock:
                                 bot_token = bot_tokens.get(bot_name)
                             if bot_token:
-                                # Try to get player name from the game API
+                                # Try to get player name from the spam service
                                 player_name = await get_player_info(uid, bot_token)
                                 if not player_name:
-                                    # Fallback: try to get player name from spam service
-                                    try:
-                                        async with aiohttp.ClientSession() as session:
-                                            spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
-                                            async with session.get(spam_url, timeout=10) as response:
-                                                if response.status == 200:
-                                                    data = await response.json()
-                                                    player_name = data.get('player_name', 'User')
-                                    except Exception as spam_error:
-                                        print(f"Error getting player name from spam service: {spam_error}")
-                                        player_name = "User"
+                                    player_name = "User"
                                 else:
                                     player_name = player_name or "User"
                             else:
@@ -1153,27 +1133,27 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                 
                                 # Send initial response to show the command was received
                                 initial_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST STATUS[/B] 🚀"
-                                if chat_id == 3037318759:
+                                                    if chat_id == 3037318759:
                                     msg_packet = await send_clan_msg(initial_msg, chat_id, key, iv)
-                                else:
+                                                    else:
                                     msg_packet = await send_msg(initial_msg, uid, key, iv)
-                                if msg_packet:
-                                    writer.write(msg_packet)
-                                    await writer.drain()
-                                    await asyncio.sleep(0.3)
+                                                    if msg_packet:
+                                                        writer.write(msg_packet)
+                                                        await writer.drain()
+                                                        await asyncio.sleep(0.3)
                                     print("Initial message sent successfully")  # Debug print
                                 else:
                                     print("Failed to create initial message packet")  # Debug print
                                 
-                                uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
-                                if chat_id == 3037318759:
-                                    msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
-                                else:
-                                    msg_packet = await send_msg(uid_msg, uid, key, iv)
-                                if msg_packet:
-                                    writer.write(msg_packet)
-                                    await writer.drain()
-                                    await asyncio.sleep(0.3)
+                                                    uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
+                                                    if chat_id == 3037318759:
+                                                        msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
+                                                    else:
+                                                        msg_packet = await send_msg(uid_msg, uid, key, iv)
+                                                    if msg_packet:
+                                                        writer.write(msg_packet)
+                                                        await writer.drain()
+                                                        await asyncio.sleep(0.3)
                                     print("UID message sent successfully")  # Debug print
                                 else:
                                     print("Failed to create UID message packet")  # Debug print
@@ -1251,7 +1231,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         completion_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST PROCESS COMPLETE[/B] 🚀"
                                                         if chat_id == 3037318759:
                                                             msg_packet = await send_clan_msg(completion_msg, chat_id, key, iv)
-                                                        else:
+                                                    else:
                                                             msg_packet = await send_msg(completion_msg, uid, key, iv)
                                                         if msg_packet:
                                                             writer.write(msg_packet)
@@ -1316,7 +1296,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                         if msg_packet:
                                             writer.write(msg_packet)
                                             await writer.drain()
-                                    except Exception as e:
+                            except Exception as e:
                                         print(f"Spam API Exception: {e}")
                                         error_msg = f"[FF0000]❌ Error: {str(e)}"
                                         if chat_id == 3037318759:
@@ -1344,12 +1324,12 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                 "Example: [00FFFF]/spam 1234567890\n"
                                 "[00FF00]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                             )
-                            if chat_id == 3037318759:
-                                msg_packet = await send_clan_msg(message, chat_id, key, iv)
-                            else:
-                                msg_packet = await send_msg(message, uid, key, iv)
-                            writer.write(msg_packet)
-                            await writer.drain()
+                        if chat_id == 3037318759:
+                            msg_packet = await send_clan_msg(message, chat_id, key, iv)
+                        else:
+                            msg_packet = await send_msg(message, uid, key, iv)
+                        writer.write(msg_packet)
+                        await writer.drain()
             writer.close()
             await writer.wait_closed()
         except asyncio.CancelledError:
@@ -1410,63 +1390,32 @@ def enc(uid):
     return encrypted_uid
 
 async def get_player_info(uid, token):
+    """Get player name using the spam service API since it's already working"""
     try:
-        print(f"Getting player info for UID: {uid}")  # Debug print
-        encrypted_uid = enc(uid)
-        if not encrypted_uid:
-            print(f"Failed to encrypt UID: {uid}")  # Debug print
-            return None
-            
-        url = "https://clientbp.ggblueshark.com/GetPlayerPersonalShow"
-        edata = bytes.fromhex(encrypted_uid)
+        print(f"Getting player info for UID: {uid} via spam service")  # Debug print
         
-        headers = {
-            'User-Agent': "Dalvik/2.1.0 (Linux; U; Android 9; ASUS_Z01QD Build/PI)",
-            'Connection': "Keep-Alive",
-            'Accept-Encoding': "gzip",
-            'Authorization': f"Bearer {token}",
-            'Content-Type': "application/x-www-form-urlencoded",
-            'Expect': "100-continue",
-            'X-Unity-Version': "2018.4.11f1",
-            'X-GA': "v1 1",
-            'ReleaseVersion': "OB50"
-        }
-
+        # Use the spam service API directly since it's already working
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=edata, headers=headers, ssl=False) as response:
-                print(f"Player info API response status: {response.status}")  # Debug print
-                if response.status != 200:
-                    print(f"Player info API failed with status: {response.status}")  # Debug print
-                    return None
+            spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
+            print(f"Calling spam service: {spam_url}")  # Debug print
+            
+            async with session.get(spam_url, timeout=10) as response:
+                print(f"Spam service response status: {response.status}")  # Debug print
                 
-                hex_data = await response.read()
-                print(f"Raw hex data length: {len(hex_data)}")  # Debug print
-                
-                try:
-                    binary = bytes.fromhex(hex_data.hex())
-                    print(f"Binary data length: {len(binary)}")  # Debug print
+                if response.status == 200:
+                    data = await response.json()
+                    print(f"Spam service response: {data}")  # Debug print
                     
-                    # Import the protobuf module for like_count
-                    import like_count_pb2
-                    items = like_count_pb2.Info()
-                    items.ParseFromString(binary)
-                    jsone = MessageToJson(items)
-                    data_info = json.loads(jsone)
-                    print(f"Parsed data: {data_info}")  # Debug print
-                    
-                    player_name = str(data_info.get('AccountInfo', {}).get('PlayerNickname', ''))
-                    print(f"Retrieved player name: {player_name}")  # Debug print
+                    player_name = data.get('player_name', '')
+                    print(f"Retrieved player name from spam service: {player_name}")  # Debug print
                     
                     if player_name and player_name.strip():
                         return player_name
                     else:
-                        print("Player name is empty or None")  # Debug print
+                        print("Player name is empty from spam service")  # Debug print
                         return None
-                        
-                except Exception as parse_error:
-                    print(f"Error parsing protobuf data: {parse_error}")  # Debug print
-                    import traceback
-                    traceback.print_exc()
+                else:
+                    print(f"Spam service failed with status: {response.status}")  # Debug print
                     return None
                     
     except Exception as e:
