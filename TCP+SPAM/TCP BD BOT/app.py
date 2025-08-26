@@ -892,8 +892,8 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                 else:
                                     msg_packet = await send_msg(msg, uid, key, iv)
                                 if msg_packet and not writer.is_closing():
-                                writer.write(msg_packet)
-                                await writer.drain()
+                                    writer.write(msg_packet)
+                                    await writer.drain()
                                     await asyncio.sleep(0.3)  # Faster response
                                 else:
                                     print("Warning: Could not send help message - writer is closing or packet is None")
@@ -906,12 +906,6 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                     break
                                 continue
                         continue
-                        if chat_id == 3037318759:
-                            msg_packet = await send_clan_msg(message, chat_id, key, iv)
-                        else:
-                            msg_packet = await send_msg(message, uid, key, iv)
-                        writer.write(msg_packet)
-                        await writer.drain()
                     elif command == "/team":
                         sender_uid = uid
                         if len(parts) == 3 and parts[1].isdigit() and parts[2].lower() == 'inv':
