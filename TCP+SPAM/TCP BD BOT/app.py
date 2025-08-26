@@ -811,24 +811,16 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                     uid = response.Data.uid
                     chat_id = response.Data.Chat_ID
                     if command == "hi":
-                        # Get player name from UID using multiple methods
+                        # Get player name from UID using spam service only
                         player_name = "User"
                         try:
-                            # Method 1: Try spam service first
-                            print("Method 1: Trying spam service...")
+                            print("Getting player name from spam service...")
                             retrieved_name = await get_player_name_from_spam_service(uid)
                             if retrieved_name:
                                 player_name = retrieved_name
                                 print(f"Successfully got player name from spam service: {player_name}")
                             else:
-                                # Method 2: Try direct API call
-                                print("Method 2: Trying direct API call...")
-                                retrieved_name = await get_player_name_direct(uid)
-                                if retrieved_name:
-                                    player_name = retrieved_name
-                                    print(f"Successfully got player name from direct API: {player_name}")
-                                else:
-                                    print("Failed to get player name from both methods, using 'User'")
+                                print("Failed to get player name from spam service, using 'User'")
                         except Exception as e:
                             print(f"Error getting player name: {e}")
                             player_name = "User"
@@ -841,24 +833,16 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                         writer.write(msg_packet)
                         await writer.drain()
                     elif command == "/help":
-                        # Get player name from UID using multiple methods
+                        # Get player name from UID using spam service only
                         player_name = "User"
                         try:
-                            # Method 1: Try spam service first
-                            print("Method 1: Trying spam service...")
+                            print("Getting player name from spam service...")
                             retrieved_name = await get_player_name_from_spam_service(uid)
                             if retrieved_name:
                                 player_name = retrieved_name
                                 print(f"Successfully got player name from spam service: {player_name}")
                             else:
-                                # Method 2: Try direct API call
-                                print("Method 2: Trying direct API call...")
-                                retrieved_name = await get_player_name_direct(uid)
-                                if retrieved_name:
-                                    player_name = retrieved_name
-                                    print(f"Successfully got player name from direct API: {player_name}")
-                                else:
-                                    print("Failed to get player name from both methods, using 'User'")
+                                print("Failed to get player name from spam service, using 'User'")
                         except Exception as e:
                             print(f"Error getting player name: {e}")
                             player_name = "User"
@@ -1386,71 +1370,7 @@ async def get_player_name_from_spam_service(uid):
         traceback.print_exc()
         return None
 
-async def get_player_name_direct(uid):
-    """Get player name directly from game API using the same method as spam service"""
-    try:
-        print(f"Getting player name directly for UID: {uid}")
-        
-        # Create the protobuf data for the UID
-        import uid_generator_pb2
-        message = uid_generator_pb2.uid_generator()
-        message.saturn_ = int(uid)
-        message.garena = 1
-        protobuf_data = message.SerializeToString()
-        
-        # Encrypt the protobuf data
-        key = b'Yg&tc%DEuh6%Zc^8'
-        iv = b'6oyZDr22E3ychjM%'
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        padded_message = pad(protobuf_data, AES.block_size)
-        encrypted_message = cipher.encrypt(padded_message)
-        encrypted_uid = encrypted_message.hex()
-        
-        print(f"Encrypted UID: {encrypted_uid}")
-        
-        # Make API call to get player info - using exact method from spam repo
-        url = "https://clientbp.ggblueshark.com/GetPlayerPersonalShow"
-        edata = bytes.fromhex(encrypted_uid)
-        
-        headers = {
-            'User-Agent': "Dalvik/2.1.0 (Linux; U; Android 9; ASUS_Z01QD Build/PI)",
-            'Connection': "Keep-Alive",
-            'Accept-Encoding': "gzip",
-            'Content-Type': "application/x-www-form-urlencoded",
-            'Expect': "100-continue",
-            'X-Unity-Version': "2018.4.11f1",
-            'X-GA': "v1 1",
-            'ReleaseVersion': "OB50"
-        }
-        
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=edata, headers=headers, ssl=False) as response:
-                print(f"Direct API response status: {response.status}")
-                if response.status != 200:
-                    print(f"Direct API returned status {response.status}")
-                    return None
-                
-                # Use exact method from spam repo
-                hex_data = await response.read()
-                binary = bytes.fromhex(hex_data.hex())
-                items = like_count_pb2.Info()
-                items.ParseFromString(binary)
-                jsone = MessageToJson(items)
-                data_info = json.loads(jsone)
-                player_name = str(data_info.get('AccountInfo', {}).get('PlayerNickname', ''))
-                
-                print(f"Direct API player name: {player_name}")
-                if player_name and player_name.strip():
-                    return player_name
-                else:
-                    print("Player name is empty or whitespace")
-                    return None
-                    
-    except Exception as e:
-        print(f"Error getting player name directly: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
+
 
 def encrypt_message(plaintext):
     try:
