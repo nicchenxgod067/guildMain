@@ -810,7 +810,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                     uid = response.Data.uid
                     chat_id = response.Data.Chat_ID
                     if command == "hi":
-                        message = "Hello, I am an automated bot. Type /help to see my commands."
+                        message = "[00FFFF]Welcome, [FFFF00]User[00FFFF]!! Type [FF00FF]/help[00FFFF] to see available commands."
                         if chat_id == 3037318759:
                             msg_packet = await send_clan_msg(message, chat_id, key, iv)
                         else:
@@ -819,17 +819,27 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                         await writer.drain()
                     elif command == "/help":
                         help_messages = [
-                            "[FF00FF]╔══════════════════════════════╗",
-                            "[FF00FF]║ [00FFFF]🤖 BOT COMMANDS MENU 🤖 [FF00FF]║",
-                            "[FF00FF]╠══════════════════════════════╣",
-                            "[FF00FF]║ [FFFF00]✦ /like [uid] - Send like to player",
-                            "[FF00FF]║ [FFFF00]✦ /spam [uid] - Send spam friend request",
-                            "[FF00FF]║ [FFFF00]✦ /team [uid] inv - Team invite",
-                            "[FF00FF]║ [FFFF00]✦ /3, /5, /6, /7 [uid] - Create group",
-                            "[FF00FF]║ [FFFF00]✦ /ai [question] - Chat with AI",
-                            "[FF00FF]║ [FFFF00]✦ /help - Show this menu",
-                            "[FF00FF]╚══════════════════════════════╝",
-                            "[00FF00]Type any command to use. Enjoy! 😊"
+                            "[00FFFF]Welcome, [FFFF00]User[00FFFF]!!",
+                            "",
+                            "[00FF00]Group Commands: [FFFFFF]/2 /3 /4 /5 /6 /7",
+                            "[00FF00]Invite Anyone: [FFFFFF]/team [UID] inv",
+                            "[00FF00]Bot in Team: [FFFFFF]/join [TEAMCODE]",
+                            "[00FF00]Start Match: [FFFFFF]/start",
+                            "[00FF00]Leave Group: [FFFFFF]/leave",
+                            "",
+                            "[FFFF00]Spam Commands: [FFFFFF]/spam [UID]",
+                            "[FFFF00]Spam Join Req: [FFFFFF]/group [UID]",
+                            "[FFFF00]Spam Room: [FFFFFF]/room [UID]",
+                            "[FFFF00]Spam Team: [FFFFFF]/troll [TEAMCODE]",
+                            "",
+                            "[0080FF]Send Likes: [FFFFFF]/like [UID]",
+                            "[0080FF]Send Visitors: [FFFFFF]/visit [UID]",
+                            "[0080FF]Group Status: [FFFFFF]/status [UID]",
+                            "[0080FF]Ban Status: [FFFFFF]/check [UID]",
+                            "",
+                            "[FF00FF]Magic Text: [FFFFFF]/gg [Text]",
+                            "[FF00FF]Talk With AI: [FFFFFF]/ai [Prompt]",
+                            "[FF00FF]Help Menu: [FFFFFF]/help"
                         ]
                         for msg in help_messages:
                             try:
@@ -839,7 +849,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                     msg_packet = await send_msg(msg, uid, key, iv)
                                 writer.write(msg_packet)
                                 await writer.drain()
-                                await asyncio.sleep(0.5)  # Small delay between messages
+                                await asyncio.sleep(0.3)  # Faster response
                             except Exception as e:
                                 print(f"Error sending help message: {e}")
                                 continue
