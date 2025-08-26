@@ -51,3 +51,16 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+
+# Git
+.git/
+
+# Cache
+.cache/
+
+# Node modules (if any)
+node_modules/
+
+# Build artifacts
+build/
+dist/

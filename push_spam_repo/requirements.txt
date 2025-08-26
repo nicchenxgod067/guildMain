@@ -1,7 +1,0 @@
-flask
-requests
-aiohttp
-protobuf
-pycryptodome
-PyJWT
-PyYAML

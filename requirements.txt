@@ -6,4 +6,5 @@ protobuf
 pycryptodome
 PyJWT
 PyYAML
+google-protobuf
 
