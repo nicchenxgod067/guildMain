@@ -1408,7 +1408,7 @@ async def get_player_name_direct(uid):
         
         print(f"Encrypted UID: {encrypted_uid}")
         
-        # Make API call to get player info
+        # Make API call to get player info - using exact method from spam repo
         url = "https://clientbp.ggblueshark.com/GetPlayerPersonalShow"
         edata = bytes.fromhex(encrypted_uid)
         
@@ -1424,27 +1424,28 @@ async def get_player_name_direct(uid):
         }
         
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=edata, headers=headers, timeout=10) as response:
+            async with session.post(url, data=edata, headers=headers, ssl=False) as response:
                 print(f"Direct API response status: {response.status}")
-                if response.status == 200:
-                    response_data = await response.read()
-                    print(f"Direct API response length: {len(response_data)}")
-                    
-                    # Parse the response using protobuf
-                    import like_count_pb2
-                    try:
-                        proto = like_count_pb2.Info()
-                        proto.ParseFromString(response_data)
-                        player_name = proto.AccountInfo.PlayerNickname
-                        print(f"Direct API player name: {player_name}")
-                        if player_name and player_name.strip():
-                            return player_name
-                    except Exception as e:
-                        print(f"Error parsing protobuf response: {e}")
-                        return None
-                else:
+                if response.status != 200:
                     print(f"Direct API returned status {response.status}")
                     return None
+                
+                # Use exact method from spam repo
+                hex_data = await response.read()
+                binary = bytes.fromhex(hex_data.hex())
+                items = like_count_pb2.Info()
+                items.ParseFromString(binary)
+                jsone = MessageToJson(items)
+                data_info = json.loads(jsone)
+                player_name = str(data_info.get('AccountInfo', {}).get('PlayerNickname', ''))
+                
+                print(f"Direct API player name: {player_name}")
+                if player_name and player_name.strip():
+                    return player_name
+                else:
+                    print("Player name is empty or whitespace")
+                    return None
+                    
     except Exception as e:
         print(f"Error getting player name directly: {e}")
         import traceback
