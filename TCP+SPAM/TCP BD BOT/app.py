@@ -795,8 +795,13 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                 clan_compiled_data = Decode_GetLoginData.Clan_Compiled_Data
                 await create_clan_startup(clan_id, clan_compiled_data, key, iv, writer)
             while True:
-                data = await reader.read(9999)
-                if not data:
+                try:
+                    data = await reader.read(9999)
+                    if not data:
+                        print("No data received from server, connection may be closed")
+                        break
+                except Exception as e:
+                    print(f"Error reading data from server: {e}")
                     break
                 with bot_tokens_lock:
                     for name, task in bot_tasks.items():
@@ -826,12 +831,22 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                             player_name = "User"
                         
                         message = f"[00FFFF]Welcome, [FFFF00]{player_name}[00FFFF]!! Type [FF00FF]/help[00FFFF] to see available commands."
-                        if chat_id == 3037318759:
-                            msg_packet = await send_clan_msg(message, chat_id, key, iv)
-                        else:
-                            msg_packet = await send_msg(message, uid, key, iv)
-                        writer.write(msg_packet)
-                        await writer.drain()
+                        try:
+                            if chat_id == 3037318759:
+                                msg_packet = await send_clan_msg(message, chat_id, key, iv)
+                            else:
+                                msg_packet = await send_msg(message, uid, key, iv)
+                            if msg_packet and not writer.is_closing():
+                                writer.write(msg_packet)
+                                await writer.drain()
+                            else:
+                                print("Warning: Could not send message - writer is closing or packet is None")
+                        except Exception as e:
+                            print(f"Error sending message: {e}")
+                            # Try to reconnect if there's a socket error
+                            if "socket" in str(e).lower():
+                                print("Socket error detected, breaking connection loop to reconnect")
+                                break
                     elif command == "/help":
                         # Get player name from UID using spam service only
                         player_name = "User"
@@ -876,11 +891,19 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                     msg_packet = await send_clan_msg(msg, chat_id, key, iv)
                                 else:
                                     msg_packet = await send_msg(msg, uid, key, iv)
-                                writer.write(msg_packet)
-                                await writer.drain()
-                                await asyncio.sleep(0.3)  # Faster response
+                                if msg_packet and not writer.is_closing():
+                                    writer.write(msg_packet)
+                                    await writer.drain()
+                                    await asyncio.sleep(0.3)  # Faster response
+                                else:
+                                    print("Warning: Could not send help message - writer is closing or packet is None")
+                                    break
                             except Exception as e:
                                 print(f"Error sending help message: {e}")
+                                # Try to reconnect if there's a socket error
+                                if "socket" in str(e).lower():
+                                    print("Socket error detected in help command, breaking connection loop to reconnect")
+                                    break
                                 continue
                         continue
                         if chat_id == 3037318759:
@@ -1298,8 +1321,12 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                             if msg_packet:
                                 writer.write(msg_packet)
                                 await writer.drain()
-            writer.close()
-            await writer.wait_closed()
+            try:
+                if not writer.is_closing():
+                    writer.close()
+                    await writer.wait_closed()
+            except Exception as e:
+                print(f"Error closing writer: {e}")
         except asyncio.CancelledError:
             print(f"TCP game connection for {bot_name} cancelled")
             break
