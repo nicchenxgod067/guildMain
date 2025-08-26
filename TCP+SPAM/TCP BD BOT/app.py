@@ -1265,13 +1265,21 @@ async def Get_AI_Response(user_input):
 # Account management functions
 def load_accounts():
     try:
-        with open("accounts.json", "r") as f:
+        # Use absolute path to accounts.json file
+        accounts_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "accounts.json")
+        with open(accounts_file, "r") as f:
             return json.load(f)
     except FileNotFoundError:
+        print(f"accounts.json not found at: {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'accounts.json')}")
+        return []
+    except Exception as e:
+        print(f"Error loading accounts.json: {e}")
         return []
 
 def save_accounts(accounts):
-    with open("accounts.json", "w") as f:
+    # Use absolute path to accounts.json file
+    accounts_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "accounts.json")
+    with open(accounts_file, "w") as f:
         json.dump(accounts, f, indent=4)
 
 def add_account(name, uid, password):
