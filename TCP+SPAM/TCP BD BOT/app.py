@@ -36,6 +36,7 @@ from protobuf_utils import (
     AES, pad, binascii
 )
 import threading
+from google.protobuf.json_format import MessageToJson
 
 # Flask app setup
 app = Flask(__name__)
@@ -810,7 +811,18 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                     uid = response.Data.uid
                     chat_id = response.Data.Chat_ID
                     if command == "hi":
-                        message = "[00FFFF]Welcome, [FFFF00]User[00FFFF]!! Type [FF00FF]/help[00FFFF] to see available commands."
+                        # Get player name from UID
+                        player_name = "User"
+                        try:
+                            with bot_tokens_lock:
+                                bot_token = bot_tokens.get(bot_name)
+                            if bot_token:
+                                player_name = await get_player_info(uid, bot_token) or "User"
+                        except Exception as e:
+                            print(f"Error getting player name: {e}")
+                            player_name = "User"
+                        
+                        message = f"[00FFFF]Welcome, [FFFF00]{player_name}[00FFFF]!! Type [FF00FF]/help[00FFFF] to see available commands."
                         if chat_id == 3037318759:
                             msg_packet = await send_clan_msg(message, chat_id, key, iv)
                         else:
@@ -818,8 +830,19 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                         writer.write(msg_packet)
                         await writer.drain()
                     elif command == "/help":
+                        # Get player name from UID
+                        player_name = "User"
+                        try:
+                            with bot_tokens_lock:
+                                bot_token = bot_tokens.get(bot_name)
+                            if bot_token:
+                                player_name = await get_player_info(uid, bot_token) or "User"
+                        except Exception as e:
+                            print(f"Error getting player name: {e}")
+                            player_name = "User"
+                        
                         help_messages = [
-                            "[00FFFF]Welcome, [FFFF00]User[00FFFF]!!",
+                            f"[00FFFF]Welcome, [FFFF00]{player_name}[00FFFF]!!",
                             "",
                             "[00FF00]Group Commands: [FFFFFF]/2 /3 /4 /5 /6 /7",
                             "[00FF00]Invite Anyone: [FFFFFF]/team [UID] inv",
@@ -1320,6 +1343,74 @@ async def Get_AI_Response(user_input):
                 error_msg = f"[API Error] Get_AI_Response: Status {response.status}"
                 print(error_msg)
                 return f"Sorry to say but something wrong in AI response: {error_msg}"
+
+# Player info functions
+def encrypt_message(plaintext):
+    try:
+        key = b'Yg&tc%DEuh6%Zc^8'
+        iv = b'6oyZDr22E3ychjM%'
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        padded_message = pad(plaintext, AES.block_size)
+        encrypted_message = cipher.encrypt(padded_message)
+        return binascii.hexlify(encrypted_message).decode('utf-8')
+    except:
+        return None
+
+def create_protobuf(uid):
+    try:
+        # Import the protobuf module for uid_generator
+        import uid_generator_pb2
+        message = uid_generator_pb2.uid_generator()
+        message.saturn_ = int(uid)
+        message.garena = 1
+        return message.SerializeToString()
+    except:
+        return None
+
+def enc(uid):
+    protobuf_data = create_protobuf(uid)
+    if protobuf_data is None:
+        return None
+    encrypted_uid = encrypt_message(protobuf_data)
+    return encrypted_uid
+
+async def get_player_info(uid, token):
+    try:
+        encrypted_uid = enc(uid)
+        if not encrypted_uid:
+            return None
+            
+        url = "https://clientbp.ggblueshark.com/GetPlayerPersonalShow"
+        edata = bytes.fromhex(encrypted_uid)
+        
+        headers = {
+            'User-Agent': "Dalvik/2.1.0 (Linux; U; Android 9; ASUS_Z01QD Build/PI)",
+            'Connection': "Keep-Alive",
+            'Accept-Encoding': "gzip",
+            'Authorization': f"Bearer {token}",
+            'Content-Type': "application/x-www-form-urlencoded",
+            'Expect': "100-continue",
+            'X-Unity-Version': "2018.4.11f1",
+            'X-GA': "v1 1",
+            'ReleaseVersion': "OB50"
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=edata, headers=headers, ssl=False) as response:
+                if response.status != 200:
+                    return None
+                hex_data = await response.read()
+                binary = bytes.fromhex(hex_data.hex())
+                
+                # Import the protobuf module for like_count
+                import like_count_pb2
+                items = like_count_pb2.Info()
+                items.ParseFromString(binary)
+                jsone = MessageToJson(items)
+                data_info = json.loads(jsone)
+                return str(data_info.get('AccountInfo', {}).get('PlayerNickname', ''))
+    except:
+        return None
 
 # Account management functions
 def load_accounts():
