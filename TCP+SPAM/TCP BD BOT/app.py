@@ -1082,6 +1082,27 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                         if len(parts) > 1 and parts[1].isdigit():
                             target_uid = parts[1]
                             try:
+                                # Send initial response to show the command was received
+                                initial_msg = f"[FF69B4]🚀 [B]SPAM FRIEND REQUEST STATUS[/B] 🚀"
+                                if chat_id == 3037318759:
+                                    msg_packet = await send_clan_msg(initial_msg, chat_id, key, iv)
+                                else:
+                                    msg_packet = await send_msg(initial_msg, uid, key, iv)
+                                if msg_packet:
+                                    writer.write(msg_packet)
+                                    await writer.drain()
+                                    await asyncio.sleep(0.3)
+                                
+                                uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
+                                if chat_id == 3037318759:
+                                    msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
+                                else:
+                                    msg_packet = await send_msg(uid_msg, uid, key, iv)
+                                if msg_packet:
+                                    writer.write(msg_packet)
+                                    await writer.drain()
+                                    await asyncio.sleep(0.3)
+                                
                                 async with aiohttp.ClientSession() as session:
                                     # Use the external spam service from the user's spam repository
                                     spam_api_url = "https://spam-friend-red.vercel.app/send_requests"
@@ -1091,31 +1112,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                         async with session.get(url, timeout=30) as response:
                                             if response.status == 200:
                                                 data = await response.json()
-                                                try:
-                                                    header_msg = "[FF69B4]🚀 [B]SPAM FRIEND REQUEST STATUS[/B] 🚀"
-                                                    if chat_id == 3037318759:
-                                                        msg_packet = await send_clan_msg(header_msg, chat_id, key, iv)
-                                                    else:
-                                                        msg_packet = await send_msg(header_msg, uid, key, iv)
-                                                    if msg_packet:
-                                                        writer.write(msg_packet)
-                                                        await writer.drain()
-                                                        await asyncio.sleep(0.3)
-                                                except Exception:
-                                                    pass
-                                                
-                                                try:
-                                                    uid_msg = f"[00FFFF]User ID: [B]{target_uid}[/B]"
-                                                    if chat_id == 3037318759:
-                                                        msg_packet = await send_clan_msg(uid_msg, chat_id, key, iv)
-                                                    else:
-                                                        msg_packet = await send_msg(uid_msg, uid, key, iv)
-                                                    if msg_packet:
-                                                        writer.write(msg_packet)
-                                                        await writer.drain()
-                                                        await asyncio.sleep(0.3)
-                                                except Exception:
-                                                    pass
+                                                print(f"Spam API Response: {data}")  # Debug print
                                                 
                                                 async def send_field(field_name, field_value):
                                                     try:
@@ -1187,7 +1184,8 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         if msg_packet:
                                                             writer.write(msg_packet)
                                                             await writer.drain()
-                                                except Exception:
+                                                except Exception as e:
+                                                    print(f"Error processing spam response: {e}")
                                                     error_msg = "[FF0000]❌ An error occurred while processing the response."
                                                     if chat_id == 3037318759:
                                                         msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
@@ -1197,6 +1195,8 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                         writer.write(msg_packet)
                                                         await writer.drain()
                                             else:
+                                                error_text = await response.text()
+                                                print(f"Spam API Error: Status {response.status}, Response: {error_text}")
                                                 message = f"[FF0000]❌ Error: Received status code {response.status}"
                                                 if chat_id == 3037318759:
                                                     msg_packet = await send_clan_msg(message, chat_id, key, iv)
@@ -1206,6 +1206,7 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                                     writer.write(msg_packet)
                                                     await writer.drain()
                                     except asyncio.TimeoutError:
+                                        print("Spam API timeout")
                                         message = "[FF0000]❌ Error: Request timed out. Please try again later."
                                         if chat_id == 3037318759:
                                             msg_packet = await send_clan_msg(message, chat_id, key, iv)
@@ -1214,7 +1215,18 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                         if msg_packet:
                                             writer.write(msg_packet)
                                             await writer.drain()
+                                    except Exception as e:
+                                        print(f"Spam API Exception: {e}")
+                                        error_msg = f"[FF0000]❌ Error: {str(e)}"
+                                        if chat_id == 3037318759:
+                                            msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
+                                        else:
+                                            msg_packet = await send_msg(error_msg, uid, key, iv)
+                                        if msg_packet:
+                                            writer.write(msg_packet)
+                                            await writer.drain()
                             except Exception as e:
+                                print(f"Spam command exception: {e}")
                                 error_msg = f"[FF0000]❌ Error: {str(e)}"
                                 if chat_id == 3037318759:
                                     msg_packet = await send_clan_msg(error_msg, chat_id, key, iv)
@@ -1231,12 +1243,12 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                 "Example: [00FFFF]/spam 1234567890\n"
                                 "[00FF00]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                             )
-                        if chat_id == 3037318759:
-                            msg_packet = await send_clan_msg(message, chat_id, key, iv)
-                        else:
-                            msg_packet = await send_msg(message, uid, key, iv)
-                        writer.write(msg_packet)
-                        await writer.drain()
+                            if chat_id == 3037318759:
+                                msg_packet = await send_clan_msg(message, chat_id, key, iv)
+                            else:
+                                msg_packet = await send_msg(message, uid, key, iv)
+                            writer.write(msg_packet)
+                            await writer.drain()
             writer.close()
             await writer.wait_closed()
         except asyncio.CancelledError:
