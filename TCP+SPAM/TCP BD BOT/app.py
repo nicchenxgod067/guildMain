@@ -1364,7 +1364,8 @@ def create_protobuf(uid):
         message.saturn_ = int(uid)
         message.garena = 1
         return message.SerializeToString()
-    except:
+    except Exception as e:
+        print(f"Error creating protobuf: {e}")
         return None
 
 def enc(uid):
@@ -1376,8 +1377,10 @@ def enc(uid):
 
 async def get_player_info(uid, token):
     try:
+        print(f"Getting player info for UID: {uid}")  # Debug print
         encrypted_uid = enc(uid)
         if not encrypted_uid:
+            print(f"Failed to encrypt UID: {uid}")  # Debug print
             return None
             
         url = "https://clientbp.ggblueshark.com/GetPlayerPersonalShow"
@@ -1397,7 +1400,9 @@ async def get_player_info(uid, token):
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url, data=edata, headers=headers, ssl=False) as response:
+                print(f"Player info API response status: {response.status}")  # Debug print
                 if response.status != 200:
+                    print(f"Player info API failed with status: {response.status}")  # Debug print
                     return None
                 hex_data = await response.read()
                 binary = bytes.fromhex(hex_data.hex())
@@ -1408,8 +1413,13 @@ async def get_player_info(uid, token):
                 items.ParseFromString(binary)
                 jsone = MessageToJson(items)
                 data_info = json.loads(jsone)
-                return str(data_info.get('AccountInfo', {}).get('PlayerNickname', ''))
-    except:
+                player_name = str(data_info.get('AccountInfo', {}).get('PlayerNickname', ''))
+                print(f"Retrieved player name: {player_name}")  # Debug print
+                return player_name
+    except Exception as e:
+        print(f"Error in get_player_info: {e}")  # Debug print
+        import traceback
+        traceback.print_exc()
         return None
 
 # Account management functions
