@@ -817,7 +817,24 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                             with bot_tokens_lock:
                                 bot_token = bot_tokens.get(bot_name)
                             if bot_token:
-                                player_name = await get_player_info(uid, bot_token) or "User"
+                                # Try to get player name from the game API
+                                player_name = await get_player_info(uid, bot_token)
+                                if not player_name:
+                                    # Fallback: try to get player name from spam service
+                                    try:
+                                        async with aiohttp.ClientSession() as session:
+                                            spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
+                                            async with session.get(spam_url, timeout=10) as response:
+                                                if response.status == 200:
+                                                    data = await response.json()
+                                                    player_name = data.get('player_name', 'User')
+                                    except Exception as spam_error:
+                                        print(f"Error getting player name from spam service: {spam_error}")
+                                        player_name = "User"
+                                else:
+                                    player_name = player_name or "User"
+                            else:
+                                player_name = "User"
                         except Exception as e:
                             print(f"Error getting player name: {e}")
                             player_name = "User"
@@ -836,7 +853,24 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                             with bot_tokens_lock:
                                 bot_token = bot_tokens.get(bot_name)
                             if bot_token:
-                                player_name = await get_player_info(uid, bot_token) or "User"
+                                # Try to get player name from the game API
+                                player_name = await get_player_info(uid, bot_token)
+                                if not player_name:
+                                    # Fallback: try to get player name from spam service
+                                    try:
+                                        async with aiohttp.ClientSession() as session:
+                                            spam_url = f"https://spam-friend-red.vercel.app/send_requests?uid={uid}"
+                                            async with session.get(spam_url, timeout=10) as response:
+                                                if response.status == 200:
+                                                    data = await response.json()
+                                                    player_name = data.get('player_name', 'User')
+                                    except Exception as spam_error:
+                                        print(f"Error getting player name from spam service: {spam_error}")
+                                        player_name = "User"
+                                else:
+                                    player_name = player_name or "User"
+                            else:
+                                player_name = "User"
                         except Exception as e:
                             print(f"Error getting player name: {e}")
                             player_name = "User"
@@ -1404,18 +1438,37 @@ async def get_player_info(uid, token):
                 if response.status != 200:
                     print(f"Player info API failed with status: {response.status}")  # Debug print
                     return None
-                hex_data = await response.read()
-                binary = bytes.fromhex(hex_data.hex())
                 
-                # Import the protobuf module for like_count
-                import like_count_pb2
-                items = like_count_pb2.Info()
-                items.ParseFromString(binary)
-                jsone = MessageToJson(items)
-                data_info = json.loads(jsone)
-                player_name = str(data_info.get('AccountInfo', {}).get('PlayerNickname', ''))
-                print(f"Retrieved player name: {player_name}")  # Debug print
-                return player_name
+                hex_data = await response.read()
+                print(f"Raw hex data length: {len(hex_data)}")  # Debug print
+                
+                try:
+                    binary = bytes.fromhex(hex_data.hex())
+                    print(f"Binary data length: {len(binary)}")  # Debug print
+                    
+                    # Import the protobuf module for like_count
+                    import like_count_pb2
+                    items = like_count_pb2.Info()
+                    items.ParseFromString(binary)
+                    jsone = MessageToJson(items)
+                    data_info = json.loads(jsone)
+                    print(f"Parsed data: {data_info}")  # Debug print
+                    
+                    player_name = str(data_info.get('AccountInfo', {}).get('PlayerNickname', ''))
+                    print(f"Retrieved player name: {player_name}")  # Debug print
+                    
+                    if player_name and player_name.strip():
+                        return player_name
+                    else:
+                        print("Player name is empty or None")  # Debug print
+                        return None
+                        
+                except Exception as parse_error:
+                    print(f"Error parsing protobuf data: {parse_error}")  # Debug print
+                    import traceback
+                    traceback.print_exc()
+                    return None
+                    
     except Exception as e:
         print(f"Error in get_player_info: {e}")  # Debug print
         import traceback

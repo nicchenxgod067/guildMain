@@ -14,13 +14,15 @@ _sym_db = _symbol_database.Default()
 
 
 
+
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='uid_generator.proto',
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x11uid_generator.proto\"\x1e\n\x0cuid_generator\x12\x0e\n\x06saturn_\x18\x01 \x01(\x03')
+  serialized_pb=_b('\n\x11uid_generator.proto\"\x1e\n\x0cuid_generator\x12\x0e\n\x06saturn_\x18\x01 \x01(\x03\x12\x0e\n\x06garena\x18\x02 \x01(\x03')
 )
+
 
 
 
@@ -39,12 +41,18 @@ _UID_GENERATOR = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='garena', full_name='uid_generator.garena', index=1,
+      number=2, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
-  enum_types=[
-  ],
+  enum_types=[],
   serialized_options=None,
   is_extendable=False,
   syntax='proto3',

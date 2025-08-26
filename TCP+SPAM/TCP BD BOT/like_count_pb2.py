@@ -14,13 +14,15 @@ _sym_db = _symbol_database.Default()
 
 
 
+
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='like_count.proto',
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0flike_count.proto\"\x1e\n\x04Info\x12\x16\n\x0cAccountInfo\x18\x01 \x01(\x0b\x32\x06.Account')
+  serialized_pb=_b('\n\x0flike_count.proto\"\x1e\n\x04Info\x12\x16\n\x0cAccountInfo\x18\x01 \x01(\x0b\x32\x06.Account\"\x1e\n\x07Account\x12\x13\n\x0bPlayerNickname\x18\x01 \x01(\t')
 )
+
 
 
 
@@ -43,8 +45,7 @@ _ACCOUNT = _descriptor.Descriptor(
   extensions=[
   ],
   nested_types=[],
-  enum_types=[
-  ],
+  enum_types=[],
   serialized_options=None,
   is_extendable=False,
   syntax='proto3',
@@ -73,8 +74,7 @@ _INFO = _descriptor.Descriptor(
   extensions=[
   ],
   nested_types=[],
-  enum_types=[
-  ],
+  enum_types=[],
   serialized_options=None,
   is_extendable=False,
   syntax='proto3',
