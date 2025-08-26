@@ -1,6 +1,14 @@
 import ssl
 import asyncio
 import time
+import os
+import sys
+
+# Add current directory to Python path to find .pb2.py files
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 import aiohttp
@@ -16,7 +24,6 @@ import base64
 import json
 import jwt
 from flask import Flask, request, jsonify, render_template_string, send_from_directory, g
-import os
 import json as py_json
 from threading import Thread
 import time
