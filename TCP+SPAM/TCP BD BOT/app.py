@@ -1134,9 +1134,9 @@ async def handle_tcp_connection(ip, port, encrypted_startup, key, iv, Decode_Get
                                     print("Test message sent successfully")  # Debug print
                                 
                                 async with aiohttp.ClientSession() as session:
-                                    # Use the external spam service directly
+                                    # Use the external spam service directly (pass bot_name so service can auth/select token)
                                     spam_api_url = "https://spam-friend-red.vercel.app/send_requests"
-                                    url = f"{spam_api_url}?uid={target_uid}"
+                                    url = f"{spam_api_url}?uid={target_uid}&bot_name={bot_name}"
                                     print(f"Calling spam API: {url}")  # Debug print
                                     
                                     try:
@@ -1732,10 +1732,20 @@ def spam_friend():
         uid = request.args.get("uid")
         if not uid:
             return jsonify({"error": "uid parameter is required"}), 400
+        # Determine which bot to use. Prefer explicit query param; otherwise pick any available.
+        bot_name = request.args.get("bot_name")
+        if not bot_name:
+            with bot_tokens_lock:
+                bot_name = next(iter(bot_tokens.keys()), None)
+        if not bot_name:
+            return jsonify({"error": "No running bots available to perform spam"}), 503
         
         # Load spam configuration
         try:
-            with open('spam_config.json', 'r') as f:
+            # Use absolute path for reliability in different working directories
+            import os
+            config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spam_config.json')
+            with open(config_path, 'r') as f:
                 spam_config = json.load(f)
             spam_api_url = spam_config.get("spam_api_url", "https://your-spam-app.vercel.app/send_requests")
             timeout = spam_config.get("timeout", 60)
@@ -1748,8 +1758,8 @@ def spam_friend():
         if not enabled:
             return jsonify({"error": "Spam functionality is disabled"}), 503
         
-        # Make request to the hosted spam API
-        response = requests.get(f"{spam_api_url}?uid={uid}", timeout=timeout)
+        # Make request to the hosted spam API (include bot_name so the service can use the right token)
+        response = requests.get(f"{spam_api_url}?uid={uid}&bot_name={bot_name}", timeout=timeout)
         
         if response.status_code == 200:
             result = response.json()
